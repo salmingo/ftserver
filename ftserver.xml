@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<version>0.2</version>
+<date>20171028T131147</date>
+<Server Port="4020"/>
+<NTP Enable="true" IP="172.28.1.3" Difference="5"/>
+<Database Enable="true" URL="http://172.28.8.8:8080/gwebend/"/>
+<LocalStorage>
+    <Number>4</Number>
+    <PathRoot#1>/data</PathRoot#1>
+    <PathRoot#2>/data1</PathRoot#2>
+    <PathRoot#3>/data2</PathRoot#3>
+    <PathRoot#4>/data3</PathRoot#4>
+</LocalStorage>
