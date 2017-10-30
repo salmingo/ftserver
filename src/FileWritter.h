@@ -6,7 +6,6 @@
  * - 缓存待写盘文件
  * - 创建子目录
  * - 串行写盘
- * - 维护线程
  * - 维护日志
  * - 维护资源
  */
@@ -14,42 +13,11 @@
 #ifndef FILEWRITTER_H_
 #define FILEWRITTER_H_
 
-#include <boost/smart_ptr.hpp>
-#include <boost/thread.hpp>
 #include <boost/container/deque.hpp>
 #include <string>
 #include "MessageQueue.h"
-
-using std::string;
-
-// 数据结构
-struct FileInfo {// 待写盘文件信息
-	string subpath;		//< 子目录名称
-	string filename;		//< 文件名称
-	int filesize;		//< 文件大小, 量纲: 字节
-	boost::shared_array<char> filedata;	//< 文件内容
-
-public:
-	FileInfo(const string& _subpath, const string& _filename, const int _filesize) {
-		subpath  = _subpath;
-		filename = _filename;
-		filesize = _filesize;
-		filedata.reset(new char[filesize]);
-	}
-
-	FileInfo(const string& _subpath, const string& _filename,
-			const int _filesize, boost::shared_array<char> _data) {
-		subpath  = _subpath;
-		filename = _filename;
-		filesize = _filesize;
-		filedata = _data;
-	}
-
-	virtual ~FileInfo() {
-		filedata.reset();
-	}
-};
-typedef boost::shared_ptr<FileInfo> FileInfoPtr;
+#include "DataTransfer.h"
+#include "ftprotocol.h"
 
 class FileWritter : public MessageQueue {
 public:
@@ -64,12 +32,13 @@ protected:
 
 	typedef boost::shared_ptr<boost::thread> threadptr;
 	typedef boost::unique_lock<boost::mutex> mutex_lock;
-	typedef boost::container::deque<FileInfoPtr> FileInfoQueue;
+	typedef boost::container::deque<nfileptr> nfileQueue;
 
 protected:
 	// 成员变量
 	string pathRoot_;		//< 当前根路径
-	FileInfoQueue quenf_;	//< 文件队列
+	nfileQueue quenf_;	//< 文件队列
+	boost::shared_ptr<DataTransfer> db_;	//< 数据库访问接口
 
 public:
 	// 接口
@@ -77,7 +46,13 @@ public:
 	 * @brief 更新文件存储盘区, 即根路径
 	 * @param path 路径名称
 	 */
-	void UpdateStorage(const string& path);
+	void UpdateStorage(const char* path);
+	/*!
+	 * @brief 设置数据库
+	 * @param enabled 启用数据库
+	 * @param url     URL地址
+	 */
+	void SetDatabase(bool enabled = false, const char* url = NULL);
 	/*!
 	 * @brief 启动写盘服务
 	 * @return
@@ -88,6 +63,11 @@ public:
 	 * @brief 停止写盘服务
 	 */
 	void StopService();
+	/*!
+	 * @brief 尝试保存文件
+	 * @param nfptr 待保存文件
+	 */
+	void SaveFile(nfileptr nfptr);
 
 protected:
 	// 功能

@@ -87,8 +87,8 @@ void DataTransfer::initParameter(char *url) {
   this->tmpChunk = (struct CurlCache *) malloc(sizeof (struct CurlCache));
 }
 
-int DataTransfer::regOrigImage(char *groupId, char *unitId, char *camId, char *gridId,
-        char *fieldId, char *imgName, char *imgPath, char *genTime, char statusstr[]) {
+int DataTransfer::regOrigImage(const char *groupId, const char *unitId, const char *camId, const char *gridId,
+		const char *fieldId, const char *imgName, const char *imgPath, const char *genTime, char statusstr[]) {
 
   multimap<string, string> params;
   multimap<string, string> files;

@@ -20,11 +20,11 @@
 
 #define LI			0
 #define VN			3
-#define MODE		3
+#define MODE			3
 #define STRATUM		0
-#define POLL		4
-#define PREC		-6
-#define UINTMAX		4294967295
+#define POLL			4
+#define PREC			-6
+#define UINTMAX		4294967295.0
 
 NTPPtr make_ntp(const char* hostIP, const uint16_t port, const int tSync) {
 	return boost::make_shared<NTPClient>(hostIP, port, tSync);
@@ -120,12 +120,14 @@ void NTPClient::thread_body() {
 			if (offset_ >= tSync_ || offset_ <= -tSync_) {
 				if (autoSync_) SynchClock();
 				id = pack.reference_identifier;
-				_gLog.Write(LOG_WARN, "NTPClient::thread_body", "Clock drifts %.6f seconds. RefSrc=%c%c%c%c. delay=%.3f msecs",
+				_gLog.Write(LOG_WARN, "NTPClient::thread_body",
+						"Clock drifts %.6f seconds. RefSrc=%c%c%c%c. delay=%.3f msecs",
 						offset_, id[0], id[1], id[2], id[3], delay_ * 1000);
 			}
 		}
 		else {
-			_gLog.Write(LOG_WARN, "NTPClient::thread_body", "Failed to take time from NTP server<%s:%u>", host_.c_str(), port_);
+			_gLog.Write(LOG_WARN, "NTPClient::thread_body",
+					"Failed to take time from NTP server<%s:%u>", host_.c_str(), port_);
 			// 时钟偏差有效期: 5周期
 			if (++nfail_ >= 5 && valid_) valid_ = false;
 		}

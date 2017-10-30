@@ -48,7 +48,7 @@ public:
 		ntp_time reference_timestamp;	// 本地时钟最后设置或修正的时间
 		ntp_time originate_timestamp;	// T1: 由本机向NTP服务器发送请求的本机时间
 		ntp_time receive_timestamp;		// T2: 请求抵达服务器时的本地时间
-		ntp_time transmit_timestamp;	// T3: 反馈离开服务器时的本地实际
+		ntp_time transmit_timestamp;		// T3: 反馈离开服务器时的本地实际
 										// T4: 反馈抵达本机时的时间
 	};
 	/* 声明数据类型 */
@@ -109,15 +109,15 @@ protected:
 	boost::mutex mtx_;		//< 互斥区
 	threadptr    thrd_;		//< 线程指针
 	std::string  host_;		//< NTP服务器的IPv4地址
-	uint16_t     port_;			//< NTP服务器的端口
-	int          sock_;			//< SOCKET套接字
-	carray       pack_;			//< 网络交互信息
-	double       offset_;		//< 时钟偏差, 量纲: 秒
+	uint16_t     port_;		//< NTP服务器的端口
+	int          sock_;		//< SOCKET套接字
+	carray       pack_;		//< 网络交互信息
+	double       offset_;	//< 时钟偏差, 量纲: 秒
 	double       delay_;		//< 网络通信延迟, 量纲: 秒
 	bool         valid_;		//< 数据有效性
 	int          nfail_;		//< 时钟偏差检查失败次数
 	double       tSync_;		//< 修正本地时钟的最大时钟偏差
-	bool         autoSync_;		//< 是否自动修正时钟偏差
+	bool         autoSync_;	//< 是否自动修正时钟偏差
 };
 typedef boost::shared_ptr<NTPClient> NTPPtr; //< NTPclient指针
 /*!

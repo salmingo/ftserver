@@ -74,8 +74,8 @@ public:
    * @param statusstr 若程序调用出错，则返回错误字符串
    * @return 正常返回GWAC_SUCCESS（0）
    */
-  int regOrigImage(char *groupId, char *unitId, char *camId, char *gridId,
-          char *fieldId, char *imgName, char *imgPath, char *genTime, char statusstr[]);
+  int regOrigImage(const char *groupId, const char *unitId, const char *camId, const char *gridId,
+		  const char *fieldId, const char *imgName, const char *imgPath, const char *genTime, char statusstr[]);
 
   /**
    * 向服务器发送OT1列表文件

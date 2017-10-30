@@ -16,14 +16,29 @@
 #include "parameter.h"
 #include "daemon.h"
 #include "globaldef.h"
+#include "TransferAgent.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::posix_time;
+GLog _gLog(stdout);
 
-GLog _gLog;
+long next_noon() {// 计算当前时钟与之后第一个正午秒数的差距
+	ptime now = second_clock::local_time();
+	ptime noon(now.date(), hours(12));
+	ptime::time_duration_type td = noon - now;
+	long secs = td.total_seconds();
+_gLog.Write("\nNow = %s\nNoon = %s\nsecs = %d",
+		to_iso_extended_string(now).c_str(),
+		to_iso_extended_string(noon).c_str(),
+		secs);
+	return (secs > 0 ? secs : 86400 + secs);
+}
 
 int main(int argc, char** argv) {
 	if (argc >= 2) {
 		if (strcmp(argv[1], "-d") == 0) {
-			param_config param;
-			param.InitFile("ftserver.xml");
+//			param_config param;
+//			param.InitFile("ftserver.xml");
+			_gLog.Write("distance = %d", next_noon());
 		}
 		else {
 			printf("Usage: ftserver <-d>\n");
@@ -42,15 +57,15 @@ int main(int argc, char** argv) {
 
 		_gLog.Write("Try to launch %s %s %s as daemon", DAEMON_NAME, DAEMON_VERSION, DAEMON_AUTHORITY);
 		// 主程序入口
-//		GeneralControl gc(&ios);
-//		if (gc.StartService()) {
-//			_gLog.Write("Daemon goes running");
-//			ios.run();
-//			gc.StopService();
-//		}
-//		else {
-//			_gLog.Write(LOG_FAULT, NULL, "Fail to launch %s", DAEMON_NAME);
-//		}
+		TransferAgent agent;
+		if (agent.StartService()) {
+			_gLog.Write("Daemon goes running");
+			ios.run();
+			agent.StopService();
+		}
+		else {
+			_gLog.Write(LOG_FAULT, NULL, "Fail to launch %s", DAEMON_NAME);
+		}
 		_gLog.Write("Daemon stopped");
 	}
 

@@ -9,8 +9,8 @@ AM_INIT_AUTOMAKE()
 AC_PROG_CXX
 AC_PROG_CC
 
-AC_CHECK_FUNCS([ftruncate gettimeofday memset mkdir select socket strerror])
-AC_CHECK_HEADERS([fcntl.h netdb.h string.h sys/socket.h syslog.h unistd.h sys/time.h])
+AC_CHECK_FUNCS([ftruncate gettimeofday memset mkdir select socket strerror getcwd])
+AC_CHECK_HEADERS([fcntl.h netdb.h string.h sys/socket.h sys/vfs.h syslog.h unistd.h sys/time.h])
 AC_CHECK_HEADER_STDBOOL
 AC_FUNC_FORK
 AC_FUNC_MALLOC

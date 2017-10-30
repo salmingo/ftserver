@@ -17,32 +17,39 @@ FileWritter::FileWritter() {
 }
 
 FileWritter::~FileWritter() {
-	if (thrd_.unique()) {
-		thrd_->interrupt();
-		thrd_->join();
-	}
-	quenf_.clear();
+	StopService();
 }
 
-void FileWritter::UpdateStorage(const string& path) {
+void FileWritter::UpdateStorage(const char* path) {
 	pathRoot_ = path;
+}
+
+void FileWritter::SetDatabase(bool enabled, const char* url) {
+	if (!enabled) db_.reset();
+	else if(url) db_.reset(new DataTransfer((char*) url));
 }
 
 bool FileWritter::StartService() {
 	const CBSlot& slot = boost::bind(&FileWritter::OnNewFile, this, _1, _2);
 	RegisterMessage(MSG_NEW_FILE, slot);
-	string mqname = "mqfts_file_writter";
-	if (!Start(mqname.c_str())) return false;
-
-	return false;
+	return Start("mqfts_file_writter");
 }
 
 void FileWritter::StopService() {
+	Stop();
+	if (quenf_.size()) {
+		_gLog.Write(LOG_WARN, "", "%d unsaved files will be lost", quenf_.size());
+		quenf_.clear();
+	}
+}
 
+void FileWritter::SaveFile(nfileptr nfptr) {
+	quenf_.push_back(nfptr);
+	PostMessage(MSG_NEW_FILE);
 }
 
 void FileWritter::OnNewFile(const long p1, const long p2) {
-	FileInfoPtr ptr = quenf_.front();
+	nfileptr ptr = quenf_.front();
 	string filepath;	// 文件路径
 	filepath = pathRoot_ + "/" + ptr->subpath;
 	if (access(filepath.c_str(), F_OK) && mkdir(filepath.c_str(), 0755)) {// 检查并创建子目录
@@ -63,7 +70,12 @@ void FileWritter::OnNewFile(const long p1, const long p2) {
 						filepath.c_str(), strerror(errno));
 			}
 			else {
-				_gLog.Write("saved file<%s>", filepath.c_str());
+				if (db_.unique()) {
+					char status[200];
+					db_->regOrigImage(ptr->gid.c_str(), ptr->uid.c_str(), ptr->cid.c_str(),
+							ptr->grid.c_str(), ptr->field.c_str(), ptr->filename.c_str(),
+							filepath.c_str(), ptr->tmobs.c_str(), status);
+				}
 				quenf_.pop_front();
 			}
 		}

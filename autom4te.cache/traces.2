@@ -410,7 +410,7 @@ m4trace:configure.ac:10: -1- AC_SUBST_TRACE([am__fastdepCC_FALSE])
 m4trace:configure.ac:10: -1- m4_pattern_allow([^am__fastdepCC_FALSE$])
 m4trace:configure.ac:10: -1- _AM_SUBST_NOTMAKE([am__fastdepCC_TRUE])
 m4trace:configure.ac:10: -1- _AM_SUBST_NOTMAKE([am__fastdepCC_FALSE])
-m4trace:configure.ac:12: -1- AC_CHECK_FUNCS([ftruncate gettimeofday memset mkdir select socket strerror])
+m4trace:configure.ac:12: -1- AC_CHECK_FUNCS([ftruncate gettimeofday memset mkdir select socket strerror getcwd])
 m4trace:configure.ac:12: -1- AH_OUTPUT([HAVE_FTRUNCATE], [/* Define to 1 if you have the `ftruncate\' function. */
 @%:@undef HAVE_FTRUNCATE])
 m4trace:configure.ac:12: -1- AH_OUTPUT([HAVE_GETTIMEOFDAY], [/* Define to 1 if you have the `gettimeofday\' function. */
@@ -425,7 +425,9 @@ m4trace:configure.ac:12: -1- AH_OUTPUT([HAVE_SOCKET], [/* Define to 1 if you hav
 @%:@undef HAVE_SOCKET])
 m4trace:configure.ac:12: -1- AH_OUTPUT([HAVE_STRERROR], [/* Define to 1 if you have the `strerror\' function. */
 @%:@undef HAVE_STRERROR])
-m4trace:configure.ac:13: -1- AC_CHECK_HEADERS([fcntl.h netdb.h string.h sys/socket.h syslog.h unistd.h sys/time.h])
+m4trace:configure.ac:12: -1- AH_OUTPUT([HAVE_GETCWD], [/* Define to 1 if you have the `getcwd\' function. */
+@%:@undef HAVE_GETCWD])
+m4trace:configure.ac:13: -1- AC_CHECK_HEADERS([fcntl.h netdb.h string.h sys/socket.h sys/vfs.h syslog.h unistd.h sys/time.h])
 m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_FCNTL_H], [/* Define to 1 if you have the <fcntl.h> header file. */
 @%:@undef HAVE_FCNTL_H])
 m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_NETDB_H], [/* Define to 1 if you have the <netdb.h> header file. */
@@ -434,6 +436,8 @@ m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_STRING_H], [/* Define to 1 if you h
 @%:@undef HAVE_STRING_H])
 m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_SYS_SOCKET_H], [/* Define to 1 if you have the <sys/socket.h> header file. */
 @%:@undef HAVE_SYS_SOCKET_H])
+m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_SYS_VFS_H], [/* Define to 1 if you have the <sys/vfs.h> header file. */
+@%:@undef HAVE_SYS_VFS_H])
 m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_SYSLOG_H], [/* Define to 1 if you have the <syslog.h> header file. */
 @%:@undef HAVE_SYSLOG_H])
 m4trace:configure.ac:13: -1- AH_OUTPUT([HAVE_UNISTD_H], [/* Define to 1 if you have the <unistd.h> header file. */
