@@ -35,7 +35,7 @@ bool TCPClient::Connect(const string& host, const uint16_t port) {
 	tcp::resolver resolver(keep_.get_service());
 	tcp::resolver::query query(host, boost::lexical_cast<string>(port));
 	tcp::resolver::iterator itertor = resolver.resolve(query);
-	error_code ec;
+	boost::system::error_code ec;
 	sock_.connect(*itertor, ec);
 	return (!ec && IsOpen());
 }
@@ -53,7 +53,7 @@ void TCPClient::AsyncConnect(const string& host, const uint16_t port) {
 }
 
 int TCPClient::Close() {
-	error_code ec;
+	boost::system::error_code ec;
 	if (sock_.is_open()) sock_.close(ec);
 	return ec.value();
 }
@@ -168,7 +168,7 @@ int TCPClient::Write(const char* buff, const int len) {
 	return n;
 }
 
-void TCPClient::handle_connect(const error_code& ec) {
+void TCPClient::handle_connect(const boost::system::error_code& ec) {
 	if (!cbconn_.empty()) cbconn_((const long) this, ec.value());
 	if (!ec) {
 		socket_base::keep_alive option(true);
@@ -177,7 +177,7 @@ void TCPClient::handle_connect(const error_code& ec) {
 	}
 }
 
-void TCPClient::handle_read(const error_code& ec, int n) {
+void TCPClient::handle_read(const boost::system::error_code& ec, int n) {
 	if (!ec && usebuf_) {
 		mutex_lock lock(mtxrcv_);
 		for(int i = 0; i < n; ++i) crcrcv_.push_back(bufrcv_[i]);
@@ -186,7 +186,7 @@ void TCPClient::handle_read(const error_code& ec, int n) {
 	if (!ec) start_read();
 }
 
-void TCPClient::handle_write(const error_code& ec, int n) {
+void TCPClient::handle_write(const boost::system::error_code& ec, int n) {
 	if (!ec) {
 		mutex_lock lock(mtxsnd_);
 		crcsnd_.erase_begin(n);
@@ -223,7 +223,7 @@ TCPServer::TCPServer()
 }
 
 TCPServer::~TCPServer() {
-	error_code ec;
+	boost::system::error_code ec;
 	if (acceptor_.is_open()) acceptor_.close(ec);
 }
 
@@ -242,7 +242,7 @@ int TCPServer::CreateServer(const uint16_t port) {
 		acceptor_.listen(10);
 		start_accept();
 	}
-	catch (error_code& ec) {
+	catch (boost::system::error_code& ec) {
 		rslt = ec.value();
 	}
 	return rslt;
@@ -256,7 +256,7 @@ void TCPServer::start_accept() {
 	}
 }
 
-void TCPServer::handle_accept(const TcpCPtr& client, const error_code& ec) {
+void TCPServer::handle_accept(const TcpCPtr& client, const boost::system::error_code& ec) {
 	if (!ec) {
 		if (!cbaccept_.empty()) cbaccept_(client, (const long) this);
 		client->start_read();

@@ -21,7 +21,6 @@
 #include "IOServiceKeep.h"
 
 using boost::asio::ip::tcp;
-using boost::system::error_code;
 
 //////////////////////////////////////////////////////////////////////////////
 /*---------------- TCPClient: 客户端 ----------------*/
@@ -159,19 +158,19 @@ protected:
 	 * @brief 处理网络连接结果
 	 * @param ec 错误代码
 	 */
-	void handle_connect(const error_code& ec);
+	void handle_connect(const boost::system::error_code& ec);
 	/*!
 	 * @brief 处理收到的网络信息
 	 * @param ec 错误代码
 	 * @param n  接收数据长度, 量纲: 字节
 	 */
-	void handle_read(const error_code& ec, int n);
+	void handle_read(const boost::system::error_code& ec, int n);
 	/*!
 	 * @brief 处理异步网络信息发送结果
 	 * @param ec 错误代码
 	 * @param n  发送数据长度, 量纲: 字节
 	 */
-	void handle_write(const error_code& ec, int n);
+	void handle_write(const boost::system::error_code& ec, int n);
 	/*!
 	 * @brief 尝试接收网络信息
 	 */

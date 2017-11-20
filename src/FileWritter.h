@@ -17,7 +17,29 @@
 #include <string>
 #include "MessageQueue.h"
 #include "DataTransfer.h"
-#include "ftprotocol.h"
+
+using std::string;
+
+// 数据结构
+struct FileInfo {// 待写盘文件信息
+	string gid;		//< 组标志
+	string uid;		//< 单元标志
+	string cid;		//< 相机标志
+	string grid;		//< 天区划分模式
+	string field;	//< 天区编号
+	string tmobs;	//< 观测时间
+	string subpath;	//< 子目录名称
+	string filename;	//< 文件名称
+	int filesize;	//< 文件大小, 量纲: 字节
+	boost::shared_array<char> filedata;	//< 文件内容
+
+public:
+	FileInfo(const int _filesize) {
+		filesize = _filesize;
+		filedata.reset(new char[filesize]);
+	}
+};
+typedef boost::shared_ptr<FileInfo> nfileptr;
 
 class FileWritter : public MessageQueue {
 public:

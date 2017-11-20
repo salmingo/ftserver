@@ -13,7 +13,6 @@
 
 #include <boost/asio.hpp>
 #include "MessageQueue.h"
-#include "ftprotocol.h"
 #include "FileWritter.h"
 
 class TransferClient : public MessageQueue {
