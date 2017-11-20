@@ -22,9 +22,8 @@ MessageQueue::~MessageQueue() {
 bool MessageQueue::RegisterMessage(const long id, const CBSlot& slot) {
 	long pos(id - MSG_USER);
 	bool rslt = pos >= 0 && pos < MQFUNC_SIZE;
-	if (rslt) {
-		funcs_[pos].connect(slot);
-	}
+
+	if (rslt) funcs_[pos].connect(slot);
 	return rslt;
 }
 
@@ -43,13 +42,12 @@ void MessageQueue::SendMessage(const long id, const long p1, const long p2) {
 }
 
 bool MessageQueue::Start(const char* name) {
-	if (thrd_.unique()) return true;
+	if (thrdmsg_.unique()) return true;
 
 	try {
-		mqname_ = name;
 		message_queue::remove(name);
 		mq_.reset(new message_queue(boost::interprocess::create_only, name, 1024, sizeof(MSG_UNIT)));
-		thrd_.reset(new boost::thread(boost::bind(&MessageQueue::thread_body, this)));
+		thrdmsg_.reset(new boost::thread(boost::bind(&MessageQueue::thread_message, this)));
 
 		return true;
 	}
@@ -60,16 +58,23 @@ bool MessageQueue::Start(const char* name) {
 }
 
 void MessageQueue::Stop() {
-	if (thrd_.unique()) {
+	if (thrdmsg_.unique()) {
 		SendMessage(MSG_QUIT);
-		thrd_->join();
+		thrdmsg_->join();
+		thrdmsg_.reset();
 	}
-	if (mq_.unique()) {
-		message_queue::remove(mqname_.c_str());
+	if (mq_.unique()) mq_.reset();
+}
+
+void MessageQueue::interrupt_thread(threadptr& thrd) {
+	if (thrd.unique()) {
+		thrd->interrupt();
+		thrd->join();
+		thrd.reset();
 	}
 }
 
-void MessageQueue::thread_body() {
+void MessageQueue::thread_message() {
 	MSG_UNIT msg;
 	message_queue::size_type szrcv;
 	message_queue::size_type szmsg = sizeof(MSG_UNIT);
@@ -78,16 +83,7 @@ void MessageQueue::thread_body() {
 
 	do {
 		mq_->receive(&msg, szmsg, szrcv, priority);
-		if ((pos = msg.id - MSG_USER) >= 0 && pos < MQFUNC_SIZE) {// 检测消息代码有效性
-			if (funcs_[pos].empty()) {// 检测回调函数有效性
-				_gLog.Write(LOG_WARN, "MessageQueue::thread_body", "Undefined callback function for message id<%d>", msg.id);
-			}
-			else {// 执行回调函数
-				(funcs_[pos])(msg.par1, msg.par2);
-			}
-		}
-		else {
-			_gLog.Write(LOG_FAULT, "MessageQueue::thread_body", "Undefined message id<%d>", msg.id);
-		}
+		if ((pos = msg.id - MSG_USER) >= 0 && pos < MQFUNC_SIZE)
+			(funcs_[pos])(msg.par1, msg.par2);
 	} while(msg.id != MSG_QUIT);
 }

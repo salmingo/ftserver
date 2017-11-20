@@ -18,11 +18,3 @@ TransferClient::TransferClient(FileWritePtr fwptr) {
 TransferClient::~TransferClient() {
 
 }
-
-bool TransferClient::IsOpen() {
-	return (socket_.unique() && socket_->is_open());
-}
-
-void TransferClient::thread_transfer() {
-
-}

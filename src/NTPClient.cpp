@@ -12,7 +12,7 @@
 #include "NTPClient.h"
 #include "GLog.h"
 
-#define JAN_1970		0x83AA7E80
+#define JAN_1970			0x83AA7E80
 #define NTP_PCK_LEN		48
 
 #define NTPFRAC(x)	(4294 * (x) + ((1981 * (x)) >> 11))
@@ -36,7 +36,7 @@ NTPClient::NTPClient(const char* hostIP, const uint16_t port, const int tSync) {
 	sock_ = -1;
 	tSync_ = tSync * 0.001;
 	pack_.reset(new char[NTP_PCK_LEN * 8]);
-	offset_ = delay_ = 0.0;
+	offset_ = 0.0;
 	valid_  = false;
 	nfail_  = 0;
 	autoSync_ = false;
@@ -44,7 +44,7 @@ NTPClient::NTPClient(const char* hostIP, const uint16_t port, const int tSync) {
 }
 
 NTPClient::~NTPClient() {
-	if (thrd_) {
+	if (thrd_.unique()) {
 		thrd_->interrupt();
 		thrd_->join();
 	}
@@ -85,7 +85,7 @@ void NTPClient::thread_body() {
 	struct addrinfo *res = NULL;
 	struct ntp_packet pack;
 	struct timeval  tv;
-	double t1, t2, t3, t4;
+	double t1, t2, t3, t4, delay;
 	unsigned char *id;
 
 	while (1) {
@@ -115,19 +115,17 @@ void NTPClient::thread_body() {
 			t4 = JAN_1970 + tv.tv_sec + tv.tv_usec * 1E-6;
 
 			offset_ = ((t2 - t1) + (t3 - t4)) * 0.5;
-			delay_  = (t4 - t1) - (t3 - t2);
+			delay   = (t4 - t1) - (t3 - t2);
 
 			if (offset_ >= tSync_ || offset_ <= -tSync_) {
 				if (autoSync_) SynchClock();
 				id = pack.reference_identifier;
-				_gLog.Write(LOG_WARN, "NTPClient::thread_body",
-						"Clock drifts %.6f seconds. RefSrc=%c%c%c%c. delay=%.3f msecs",
-						offset_, id[0], id[1], id[2], id[3], delay_ * 1000);
+				_gLog.Write(LOG_WARN, NULL, "Clock drifts %.6f seconds. RefSrc=%c%c%c%c. delay=%.3f msecs",
+						offset_, id[0], id[1], id[2], id[3], delay * 1000);
 			}
 		}
 		else {
-			_gLog.Write(LOG_WARN, "NTPClient::thread_body",
-					"Failed to take time from NTP server<%s:%u>", host_.c_str(), port_);
+			_gLog.Write(LOG_WARN, NULL, "Failed to communicate with NTP server<%s:%u>", host_.c_str(), port_);
 			// 时钟偏差有效期: 5周期
 			if (++nfail_ >= 5 && valid_) valid_ = false;
 		}

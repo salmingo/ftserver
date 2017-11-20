@@ -45,10 +45,6 @@ public:
 		filesize = _filesize;
 		filedata.reset(new char[filesize]);
 	}
-
-	virtual ~ft_fileinfo() {
-		filedata.reset();
-	}
 };
 typedef boost::shared_ptr<ft_fileinfo> nfileptr;
 

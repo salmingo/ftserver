@@ -43,6 +43,16 @@ protected:
 public:
 	// 接口
 	/*!
+	 * @brief 启动写盘服务
+	 * @return
+	 * 服务启动结果
+	 */
+	bool StartService();
+	/*!
+	 * @brief 停止写盘服务
+	 */
+	void StopService();
+	/*!
 	 * @brief 更新文件存储盘区, 即根路径
 	 * @param path 路径名称
 	 */
@@ -53,16 +63,6 @@ public:
 	 * @param url     URL地址
 	 */
 	void SetDatabase(bool enabled = false, const char* url = NULL);
-	/*!
-	 * @brief 启动写盘服务
-	 * @return
-	 * 服务启动结果
-	 */
-	bool StartService();
-	/*!
-	 * @brief 停止写盘服务
-	 */
-	void StopService();
 	/*!
 	 * @brief 尝试保存文件
 	 * @param nfptr 待保存文件

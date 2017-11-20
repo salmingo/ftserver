@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string>
+#include <boost/filesystem/path.hpp>
+#include <boost/format.hpp>
 #include "GLog.h"
 #include "globaldef.h"
 
@@ -18,9 +20,14 @@ using namespace boost::posix_time;
 GLog::GLog(FILE *out) {
 	day_ = -1;
 	fd_  = out;
+	bytecache_ = 0;
 }
 
 GLog::~GLog() {
+	if (thrdCycle_.unique()) {
+		thrdCycle_->interrupt();
+		thrdCycle_->join();
+	}
 	if (fd_ && fd_ != stdout && fd_ != stderr) fclose(fd_);
 }
 
@@ -37,16 +44,38 @@ bool GLog::valid_file(ptime &t) {
 	}
 
 	if (fd_ == NULL) {
-		char pathname[200];
-
 		if (access(gLogDir, F_OK)) mkdir(gLogDir, 0755);	// 创建目录
-		sprintf(pathname, "%s/%s%s.log",
-				gLogDir, gLogPrefix, to_iso_string(date).c_str());
-		fd_ = fopen(pathname, "a+");
-		fprintf(fd_, "%s\n", string(79, '-').c_str());
+		if (!access(gLogDir, W_OK | X_OK)) {
+			boost::filesystem::path path = gLogDir;
+			boost::format fmt("%s%s.log");
+			fmt % gLogPrefix % to_iso_string(date);
+			path.append(fmt.str());
+			fd_ = fopen(path.string().c_str(), "a+");
+			tmlast_ = t;
+			bytecache_ = fprintf(fd_, "%s\n", string(79, '-').c_str());
+
+			if (!thrdCycle_.unique()) {
+				thrdCycle_.reset(new boost::thread(boost::bind(&GLog::thread_cycle, this)));
+			}
+		}
 	}
 
 	return (fd_ != NULL);
+}
+
+void GLog::thread_cycle() {
+	boost::chrono::seconds period(1);
+	time_duration td;
+
+	while(1) {
+		boost::this_thread::sleep_for(period);
+
+		mutex_lock lock(mtx_);
+		if (bytecache_ > 0 && (second_clock::local_time() - tmlast_).total_seconds() > 1) {
+			fflush(fd_);
+			bytecache_ = 0;
+		}
+	}
 }
 
 void GLog::Write(const char* format, ...) {
@@ -57,14 +86,14 @@ void GLog::Write(const char* format, ...) {
 
 	if (valid_file(t)) {
 		// 时间标签
-		fprintf(fd_, "%s >> ", to_simple_string(t.time_of_day()).c_str());
+		bytecache_ += fprintf(fd_, "%s >> ", to_simple_string(t.time_of_day()).c_str());
 		// 日志描述的格式与内容
 		va_list vl;
 		va_start(vl, format);
-		vfprintf(fd_, format, vl);
+		bytecache_ += vfprintf(fd_, format, vl);
 		va_end(vl);
-		fprintf(fd_, "\n");
-		fflush(fd_);
+		bytecache_ += fprintf(fd_, "\n");
+		tmlast_ = t;
 	}
 }
 
@@ -76,18 +105,18 @@ void GLog::Write(const LOG_TYPE type, const char* where, const char* format, ...
 
 	if (valid_file(t)) {
 		// 时间标签
-		fprintf(fd_, "%s >> ", to_simple_string(t.time_of_day()).c_str());
+		bytecache_ += fprintf(fd_, "%s >> ", to_simple_string(t.time_of_day()).c_str());
 		// 日志类型
-		if (type == LOG_WARN)       fprintf(fd_, "WARN: ");
-		else if (type == LOG_FAULT) fprintf(fd_, "ERROR: ");
+		if (type == LOG_WARN)       bytecache_ += fprintf(fd_, "WARN: ");
+		else if (type == LOG_FAULT) bytecache_ += fprintf(fd_, "ERROR: ");
 		// 事件位置
-		if (where) fprintf(fd_, "%s, ", where);
+		if (where) bytecache_ += fprintf(fd_, "%s, ", where);
 		// 日志描述的格式与内容
 		va_list vl;
 		va_start(vl, format);
-		vfprintf(fd_, format, vl);
+		bytecache_ += vfprintf(fd_, format, vl);
 		va_end(vl);
-		fprintf(fd_, "\n");
-		fflush(fd_);
+		bytecache_ += fprintf(fd_, "\n");
+		tmlast_ = t;
 	}
 }

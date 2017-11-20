@@ -8,7 +8,6 @@
 #ifndef MESSAGEQUEUE_H_
 #define MESSAGEQUEUE_H_
 
-#include <string>
 #include <boost/signals2.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/thread.hpp>
@@ -19,22 +18,15 @@ public:
 	MessageQueue();
 	virtual ~MessageQueue();
 
-public:
-	// 数据类型
-	// 声明消息回调函数
-	typedef boost::signals2::signal<void (long, long)> CallbackFunc;
-	// 函数插槽
-	typedef CallbackFunc::slot_type CBSlot;
-
 protected:
-	// 数据类型
+	/* 数据类型 */
 	enum MSG_BASE {// 基本消息
 		MSG_QUIT = 0,		//< 退出消息队列
 		MSG_USER = 128		//< 用户消息起始地址
 	};
 
 	struct MSG_UNIT {// 消息单元
-		long id;	//< 消息代码
+		long id;		//< 消息代码
 		long par1;	//< 参数(支持两个参数)
 		long par2;
 
@@ -59,18 +51,19 @@ protected:
 		}
 	};
 
+	typedef boost::signals2::signal<void (long, long)> CallbackFunc;	//< 消息响应函数类型
+	typedef CallbackFunc::slot_type CBSlot;						//< 响应函数插槽
 	typedef boost::interprocess::message_queue message_queue;	//< 消息队列
-	typedef boost::shared_ptr<message_queue> mqptr;				//< 消息队列指针
+	typedef boost::shared_ptr<message_queue> msgqptr;			//< 消息队列指针
+	typedef boost::shared_array<CallbackFunc> cbfarray;			//< 回调函数数组
 	typedef boost::unique_lock<boost::mutex> mutex_lock;			//< 互斥锁
 	typedef boost::shared_ptr<boost::thread> threadptr;			//< 线程指针
-	typedef boost::shared_array<CallbackFunc> cbfa;				//< 回调函数数组
 
 protected:
 	// 成员变量
-	std::string mqname_;		//< 消息队列名称
-	mqptr mq_;			//< 消息队列
-	threadptr thrd_;		//< 消息响应线程
-	cbfa funcs_;			//< 回调函数
+	msgqptr mq_;			//< 消息队列
+	threadptr thrdmsg_;	//< 消息响应线程
+	cbfarray funcs_;		//< 回调函数
 
 public:
 	// 接口
@@ -111,9 +104,14 @@ public:
 protected:
 	// 功能函数
 	/*!
+	 * @brief 中止线程
+	 * @param thrd 线程指针
+	 */
+	void interrupt_thread(threadptr& thrd);
+	/*!
 	 * @brief 线程, 监测/响应消息
 	 */
-	void thread_body();
+	void thread_message();
 };
 
 #endif /* MESSAGEQUEUE_H_ */

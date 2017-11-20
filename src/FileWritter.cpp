@@ -5,10 +5,7 @@
  */
 
 #include <boost/make_shared.hpp>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <string.h>
+#include <boost/filesystem.hpp>
 #include <stdio.h>
 #include "FileWritter.h"
 #include "GLog.h"
@@ -49,38 +46,34 @@ void FileWritter::SaveFile(nfileptr nfptr) {
 }
 
 void FileWritter::OnNewFile(const long p1, const long p2) {
+	namespace fs = boost::filesystem;
+	fs::path filepath = pathRoot_;	// 文件路径
 	nfileptr ptr = quenf_.front();
-	string filepath;	// 文件路径
-	filepath = pathRoot_ + "/" + ptr->subpath;
-	if (access(filepath.c_str(), F_OK) && mkdir(filepath.c_str(), 0755)) {// 检查并创建子目录
-		_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to create directory<%s>. %s",
-				filepath.c_str(), strerror(errno));
+
+	filepath /= ptr->subpath;
+	if (!fs::is_directory(filepath) && !fs::create_directory(filepath)) {
+		_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to create directory<%s>", filepath.c_str());
 	}
-	else {// 写入文件
-		filepath += "/" + ptr->filename;
-		FILE* fp = fopen(filepath.c_str(), "wb");
-		if (fp) {
-			char* data = ptr->filedata.get();
+	else {
+		FILE *fp;
+
+		filepath /= ptr->filename;
+		if (NULL != (fp = fopen(filepath.c_str(), "wb"))) {
+			char *data = ptr->filedata.get();
 			int towrite(ptr->filesize), written(0);
-			while (written < towrite) {
-				written += fwrite(data + written, 1, towrite - written, fp);
+			while (written < towrite) written += fwrite(data + written, 1, towrite - written, fp);
+			fclose(fp);
+
+			if (db_.unique()) {
+				char status[200];
+				db_->regOrigImage(ptr->gid.c_str(), ptr->uid.c_str(), ptr->cid.c_str(),
+						ptr->grid.c_str(), ptr->field.c_str(), ptr->filename.c_str(),
+						filepath.c_str(), ptr->tmobs.c_str(), status);
 			}
-			if (fclose(fp)) {
-				_gLog.Write(LOG_WARN, "FileWritter::OnNewFile", "some error on saving file<%s>",
-						filepath.c_str(), strerror(errno));
-			}
-			else {
-				if (db_.unique()) {
-					char status[200];
-					db_->regOrigImage(ptr->gid.c_str(), ptr->uid.c_str(), ptr->cid.c_str(),
-							ptr->grid.c_str(), ptr->field.c_str(), ptr->filename.c_str(),
-							filepath.c_str(), ptr->tmobs.c_str(), status);
-				}
-				quenf_.pop_front();
-			}
+			quenf_.pop_front();
 		}
 		else {
-			_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to save file<%s>. %s",
+			_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to create file<%s>. %s",
 					filepath.c_str(), strerror(errno));
 		}
 	}

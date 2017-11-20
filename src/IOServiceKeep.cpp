@@ -9,8 +9,6 @@
 #include <boost/bind.hpp>
 #include "IOServiceKeep.h"
 
-using boost::asio::io_service;
-
 IOServiceKeep::IOServiceKeep() {
 	work_.reset(new work(ios_));
 	thrd_keep_.reset(new boost::thread(boost::bind(&io_service::run, &ios_)));

@@ -7,7 +7,8 @@
  * @note
  * 使用互斥锁管理文件写入操作, 将并行操作转换为串性操作, 避免日志混淆
  * @note
- * 当输入\n后执行硬盘写入, 因此不需要使用内存缓冲区减少IO操作策略
+ * 2017-11-19
+ * - 设置监测量和线程, 在缓冲数据长度超过1KB或1秒以上延时无更新数据时, 写入硬盘
  */
 
 #ifndef GLOG_H_
@@ -16,6 +17,7 @@
 #include <stdio.h>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/smart_ptr.hpp>
 
 enum LOG_TYPE {// 日志类型
 	LOG_NORMAL,	// 普通
@@ -38,6 +40,10 @@ protected:
 	 * 当日期变更时, 需重新创建日志文件
 	 */
 	bool valid_file(boost::posix_time::ptime &t);
+	/*!
+	 * @brief 周期线程, 延时写入硬盘
+	 */
+	void thread_cycle();
 
 public:
 	/*!
@@ -54,12 +60,18 @@ public:
 	void Write(const LOG_TYPE type, const char* where, const char* format, ...);
 
 protected:
-	/* 声明数据类型 */
+	/* 数据类型 */
 	typedef boost::unique_lock<boost::mutex> mutex_lock; //< 基于boost::mutex的互斥锁
-	/* 声明成员变量 */
+	typedef boost::shared_ptr<boost::thread> threadptr;
+
+protected:
+	/* 成员变量 */
 	boost::mutex mtx_;	//< 互斥区
 	int  day_;			//< UTC日期
 	FILE *fd_;			//< 日志文件描述符
+	boost::posix_time::ptime tmlast_;	//< 最后一次生成日志的时间
+	int bytecache_;		//< 待刷新数据长度
+	threadptr thrdCycle_;	//< 周期线程
 };
 
 extern GLog _gLog;

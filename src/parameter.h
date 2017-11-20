@@ -24,15 +24,21 @@ struct param_config {// 软件配置参数
 	int diffNTP;	//< 时钟最大偏差
 	bool bDB;		//< 是否启用数据库
 	string urlDB;	//< 数据库链接地址
+	/* 原始数据存储路径 */
+	bool bFreeStorage;	//< 是否启用原始数据盘区清除操作
+	int minDiskStorage;	//< 最小磁盘容量, 量纲: GB. 当小于该值时更换盘区或删除历史数据
 	int nStorage;	//< 文件存储盘区数量
 	int iStorage;	//< 当前使用盘区索引
 	int iOld;		//< 上次使用盘区索引
 	vector<string> pathStorage;	//< 文件存储盘区名称列表
-	bool bFreeDisk;	//< 是否启用磁盘清除操作
-	int freeDisk;	//< 最小磁盘容量, 量纲: GB. 当小于该值时更换盘区或删除历史数据
+	/* 模板数据存储路径 */
+	bool bFreeTemplate;	//< 是否启用模板存储盘区清楚操作
+	int minDiskTemplate;	//< 最小磁盘容量, 量纲: GB
+	int nTemplate;	//< 模板存储盘区数量
+	vector<string> pathTemplate;	//< 模板存储盘区名称列表
 
 private:
-	string filepath;	//< 配置文件路径
+	string pathxml;	//< 配置文件路径
 
 public:
 	virtual ~param_config() {
@@ -40,7 +46,7 @@ public:
 			using boost::property_tree::ptree;
 
 			ptree pt;
-			read_xml(filepath, pt, boost::property_tree::xml_parser::trim_whitespace);
+			read_xml(pathxml, pt, boost::property_tree::xml_parser::trim_whitespace);
 
 			for (ptree::iterator it = pt.begin(); it != pt.end(); ++it) {
 				if (boost::iequals((*it).first, "LocalStorage")) {
@@ -49,7 +55,7 @@ public:
 				}
 			}
 			boost::property_tree::xml_writer_settings<std::string> settings(' ', 4);
-			write_xml(filepath, pt, std::locale(), settings);
+			write_xml(pathxml, pt, std::locale(), settings);
 		}
 	}
 	/*!
@@ -57,7 +63,7 @@ public:
 	 * @param filepath 文件路径
 	 */
 	void InitFile(const std::string& filepath) {
-		this->filepath = filepath;
+		pathxml = filepath;
 
 		using namespace boost::posix_time;
 		using boost::property_tree::ptree;
@@ -73,16 +79,33 @@ public:
 		pt.add("NTP.<xmlattr>.Difference",  diffNTP = 5);
 		pt.add("Database.<xmlattr>.Enable", bDB = true);
 		pt.add("Database.<xmlattr>.URL",    urlDB = "http://172.28.8.8:8080/gwebend/");
-		pt.add("CheckDisk.<xmlattr>.Enable", bFreeDisk = false);
-		pt.add("CheckDisk.<xmlattr>.MinimumFree", freeDisk = 100);
 
-		ptree& node = pt.add("LocalStorage", "");
-		string path = "/data";
-		node.add("DiskNumber.<xmlattr>.Value", nStorage = 1);
-		node.add("DiskIndex.<xmlattr>.Value",  iStorage = 0);
-		node.add("PathRoot#1.<xmlattr>.Name", path);
-		pathStorage.push_back(path);
+		ptree& node1 = pt.add("LocalStorage", "");
+		string path11 = "/data1";
+		string path12 = "/data2";
+		string path13 = "/data3";
+		node1.add("AutoFree.<xmlattr>.Enable", bFreeStorage = true);
+		node1.add("AutoFree.<xmlattr>.MinimumCapacity", minDiskStorage = 100);
+		node1.add("DiskNumber.<xmlattr>.Value", nStorage = 3);
+		node1.add("DiskIndex.<xmlattr>.Value",  iStorage = 0);
+		node1.add("PathRoot#1.<xmlattr>.Name", path11);
+		node1.add("PathRoot#2.<xmlattr>.Name", path12);
+		node1.add("PathRoot#3.<xmlattr>.Name", path13);
+		pathStorage.push_back(path11);
+		pathStorage.push_back(path12);
+		pathStorage.push_back(path13);
 		iOld = iStorage;
+
+		ptree& node2 = pt.add("Template", "");
+		string path21 = "/data/GWAC/output";
+		string path22 = "/data/GWAC/gwacsub";
+		node2.add("AutoFree.<xmlattr>.Enable", bFreeTemplate = true);
+		node2.add("AutoFree.<xmlattr>.MinimumCapacity", minDiskTemplate = 100);
+		node2.add("Directory.<xmlattr>.Number", nTemplate = 2);
+		node2.add("PathRoot#1.<xmlattr>.Name", path21);
+		node2.add("PathRoot#2.<xmlattr>.Name", path22);
+		pathTemplate.push_back(path21);
+		pathTemplate.push_back(path22);
 
 		boost::property_tree::xml_writer_settings<std::string> settings(' ', 4);
 		write_xml(filepath, pt, std::locale(), settings);
@@ -93,7 +116,7 @@ public:
 	 * @param filepath 文件路径
 	 */
 	void LoadFile(const std::string& filepath) {
-		this->filepath = filepath;
+		pathxml = filepath;
 
 		try {
 			using boost::property_tree::ptree;
@@ -115,12 +138,10 @@ public:
 					bDB   = child.second.get("Database.<xmlattr>.Enable", true);
 					urlDB = child.second.get("Database.<xmlattr>.URL",    "http://172.28.8.8:8080/gwebend/");
 				}
-				else if (boost::iequals(child.first, "CheckDisk")) {
-					bFreeDisk= child.second.get("CheckDisk.<xmlattr>.Enable",      false);
-					freeDisk = child.second.get("CheckDisk.<xmlattr>.MinimumFree", 100);
-				}
 				else if (boost::iequals(child.first, "LocalStorage")) {
 					boost::format fmt("PathRoot#%d.<xmlattr>.Name");
+					bFreeStorage = child.second.get("AutoFree.<xmlattr>.Enable", true);
+					minDiskStorage = child.second.get("AutoFree.<xmlattr>.MinimumCapacity", 100);
 					nStorage = child.second.get("DiskNumber.<xmlattr>.Value", 1);
 					iStorage = child.second.get("DiskIndex.<xmlattr>.Value",  0);
 					iOld     = iStorage;
@@ -129,6 +150,19 @@ public:
 						string path = child.second.get(fmt.str(), "/data");
 						boost::trim_right_copy_if(path, boost::is_punct() || boost::is_space());
 						pathStorage.push_back(path);
+					}
+				}
+				else if (boost::iequals(child.first, "Template")) {
+					boost::format fmt("PathRoot#%d.<xmlattr>.Name");
+					bFreeTemplate = child.second.get("AutoFree.<xmlattr>.Enable", true);
+					minDiskTemplate = child.second.get("AutoFree.<xmlattr>.MinimumCapacity", 100);
+					nTemplate = child.second.get("Directory.<xmlattr>.Number", 1);
+					iOld     = iStorage;
+					for (int i = 1; i <= nStorage; ++i) {
+						fmt % i;
+						string path = child.second.get(fmt.str(), "/data");
+						boost::trim_right_copy_if(path, boost::is_punct() || boost::is_space());
+						pathTemplate.push_back(path);
 					}
 				}
 			}
