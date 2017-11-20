@@ -103,9 +103,10 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ftserver_OBJECTS = daemon.$(OBJEXT) GLog.$(OBJEXT) \
 	IOServiceKeep.$(OBJEXT) MessageQueue.$(OBJEXT) \
-	NTPClient.$(OBJEXT) FileWritter.$(OBJEXT) \
-	DataTransfer.$(OBJEXT) TransferClient.$(OBJEXT) \
-	TransferAgent.$(OBJEXT) ftserver.$(OBJEXT)
+	NTPClient.$(OBJEXT) tcpasio.$(OBJEXT) AsciiProtocol.$(OBJEXT) \
+	FileWritter.$(OBJEXT) DataTransfer.$(OBJEXT) \
+	FileReceiver.$(OBJEXT) TransferAgent.$(OBJEXT) \
+	ftserver.$(OBJEXT)
 ftserver_OBJECTS = $(am_ftserver_OBJECTS)
 am__DEPENDENCIES_1 =
 ftserver_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
@@ -184,7 +185,7 @@ CXX = g++
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"ftserver\" -DPACKAGE_TARNAME=\"ftserver\" -DPACKAGE_VERSION=\"0.2\" -DPACKAGE_STRING=\"ftserver\ 0.2\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DPACKAGE=\"ftserver\" -DVERSION=\"0.2\" -DHAVE_FTRUNCATE=1 -DHAVE_GETTIMEOFDAY=1 -DHAVE_MEMSET=1 -DHAVE_MKDIR=1 -DHAVE_SELECT=1 -DHAVE_SOCKET=1 -DHAVE_STRERROR=1 -DHAVE_GETCWD=1 -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_FCNTL_H=1 -DHAVE_NETDB_H=1 -DHAVE_STRING_H=1 -DHAVE_SYS_SOCKET_H=1 -DHAVE_SYSLOG_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_TIME_H=1 -DHAVE__BOOL=1 -DHAVE_FORK=1 -DHAVE_VFORK=1 -DHAVE_WORKING_VFORK=1 -DHAVE_WORKING_FORK=1 -DHAVE_STDLIB_H=1 -DHAVE_MALLOC=1 -DHAVE_STDLIB_H=1 -DHAVE_REALLOC=1
+DEFS = -DPACKAGE_NAME=\"ftserver\" -DPACKAGE_TARNAME=\"ftserver\" -DPACKAGE_VERSION=\"0.2\" -DPACKAGE_STRING=\"ftserver\ 0.2\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DPACKAGE=\"ftserver\" -DVERSION=\"0.2\" -DHAVE_FTRUNCATE=1 -DHAVE_GETTIMEOFDAY=1 -DHAVE_MEMSET=1 -DHAVE_MKDIR=1 -DHAVE_SELECT=1 -DHAVE_SOCKET=1 -DHAVE_STRERROR=1 -DHAVE_GETCWD=1 -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_FCNTL_H=1 -DHAVE_NETDB_H=1 -DHAVE_STRING_H=1 -DHAVE_SYS_SOCKET_H=1 -DHAVE_SYSLOG_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_TIME_H=1 -DHAVE_FLOAT_H=1 -DHAVE__BOOL=1 -DHAVE_FORK=1 -DHAVE_VFORK=1 -DHAVE_WORKING_VFORK=1 -DHAVE_WORKING_FORK=1 -DHAVE_STDLIB_H=1 -DHAVE_MALLOC=1 -DHAVE_STDLIB_H=1 -DHAVE_REALLOC=1
 DEPDIR = .deps
 ECHO_C = \c
 ECHO_N = 
@@ -271,10 +272,8 @@ target_vendor = apple
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ../..
-ftserver_SOURCES = daemon.cpp GLog.cpp IOServiceKeep.cpp MessageQueue.cpp NTPClient.cpp \
-                 FileWritter.cpp \
-                 DataTransfer.cpp \
-                 TransferClient.cpp TransferAgent.cpp \
+ftserver_SOURCES = daemon.cpp GLog.cpp IOServiceKeep.cpp MessageQueue.cpp NTPClient.cpp tcpasio.cpp \
+                 AsciiProtocol.cpp FileWritter.cpp DataTransfer.cpp FileReceiver.cpp TransferAgent.cpp \
                  ftserver.cpp
 
 ftserver_LDFLAGS = -L/usr/local/lib
@@ -367,16 +366,18 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/AsciiProtocol.Po
 include ./$(DEPDIR)/DataTransfer.Po
+include ./$(DEPDIR)/FileReceiver.Po
 include ./$(DEPDIR)/FileWritter.Po
 include ./$(DEPDIR)/GLog.Po
 include ./$(DEPDIR)/IOServiceKeep.Po
 include ./$(DEPDIR)/MessageQueue.Po
 include ./$(DEPDIR)/NTPClient.Po
 include ./$(DEPDIR)/TransferAgent.Po
-include ./$(DEPDIR)/TransferClient.Po
 include ./$(DEPDIR)/daemon.Po
 include ./$(DEPDIR)/ftserver.Po
+include ./$(DEPDIR)/tcpasio.Po
 
 .cpp.o:
 	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

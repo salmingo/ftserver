@@ -1358,8 +1358,7 @@ FileWritter.o: ../../src/FileWritter.cpp \
   /usr/local/include/boost/interprocess/detail/simple_swap.hpp \
   /usr/local/include/boost/interprocess/offset_ptr.hpp \
   /usr/local/include/boost/interprocess/detail/cast_tags.hpp \
-  ../../src/DataTransfer.h ../../src/AllHeader.h ../../src/ftprotocol.h \
-  ../../src/GLog.h \
+  ../../src/DataTransfer.h ../../src/AllHeader.h ../../src/GLog.h \
   /usr/local/include/boost/date_time/posix_time/posix_time.hpp \
   /usr/local/include/boost/date_time/posix_time/time_formatters.hpp \
   /usr/local/include/boost/date_time/gregorian/gregorian.hpp \
@@ -4506,8 +4505,6 @@ FileWritter.o: ../../src/FileWritter.cpp \
 ../../src/DataTransfer.h:
 
 ../../src/AllHeader.h:
-
-../../src/ftprotocol.h:
 
 ../../src/GLog.h:
 

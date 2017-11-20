@@ -25,14 +25,12 @@ struct param_config {// 软件配置参数
 	bool bDB;		//< 是否启用数据库
 	string urlDB;	//< 数据库链接地址
 	/* 原始数据存储路径 */
-	bool bFreeStorage;	//< 是否启用原始数据盘区清除操作
 	int minDiskStorage;	//< 最小磁盘容量, 量纲: GB. 当小于该值时更换盘区或删除历史数据
 	int nStorage;	//< 文件存储盘区数量
 	int iStorage;	//< 当前使用盘区索引
 	int iOld;		//< 上次使用盘区索引
 	vector<string> pathStorage;	//< 文件存储盘区名称列表
 	/* 模板数据存储路径 */
-	bool bFreeTemplate;	//< 是否启用模板存储盘区清楚操作
 	int minDiskTemplate;	//< 最小磁盘容量, 量纲: GB
 	int nTemplate;	//< 模板存储盘区数量
 	vector<string> pathTemplate;	//< 模板存储盘区名称列表
@@ -84,7 +82,6 @@ public:
 		string path11 = "/data1";
 		string path12 = "/data2";
 		string path13 = "/data3";
-		node1.add("AutoFree.<xmlattr>.Enable", bFreeStorage = true);
 		node1.add("AutoFree.<xmlattr>.MinimumCapacity", minDiskStorage = 100);
 		node1.add("DiskNumber.<xmlattr>.Value", nStorage = 3);
 		node1.add("DiskIndex.<xmlattr>.Value",  iStorage = 0);
@@ -99,7 +96,6 @@ public:
 		ptree& node2 = pt.add("Template", "");
 		string path21 = "/data/GWAC/output";
 		string path22 = "/data/GWAC/gwacsub";
-		node2.add("AutoFree.<xmlattr>.Enable", bFreeTemplate = true);
 		node2.add("AutoFree.<xmlattr>.MinimumCapacity", minDiskTemplate = 100);
 		node2.add("Directory.<xmlattr>.Number", nTemplate = 2);
 		node2.add("PathRoot#1.<xmlattr>.Name", path21);
@@ -140,7 +136,6 @@ public:
 				}
 				else if (boost::iequals(child.first, "LocalStorage")) {
 					boost::format fmt("PathRoot#%d.<xmlattr>.Name");
-					bFreeStorage = child.second.get("AutoFree.<xmlattr>.Enable", true);
 					minDiskStorage = child.second.get("AutoFree.<xmlattr>.MinimumCapacity", 100);
 					nStorage = child.second.get("DiskNumber.<xmlattr>.Value", 1);
 					iStorage = child.second.get("DiskIndex.<xmlattr>.Value",  0);
@@ -154,7 +149,6 @@ public:
 				}
 				else if (boost::iequals(child.first, "Template")) {
 					boost::format fmt("PathRoot#%d.<xmlattr>.Name");
-					bFreeTemplate = child.second.get("AutoFree.<xmlattr>.Enable", true);
 					minDiskTemplate = child.second.get("AutoFree.<xmlattr>.MinimumCapacity", 100);
 					nTemplate = child.second.get("Directory.<xmlattr>.Number", 1);
 					iOld     = iStorage;

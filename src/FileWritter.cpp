@@ -10,6 +10,10 @@
 #include "FileWritter.h"
 #include "GLog.h"
 
+FileWritePtr make_filewritter() {
+	return boost::make_shared<FileWritter>();
+}
+
 FileWritter::FileWritter() {
 }
 
@@ -59,9 +63,7 @@ void FileWritter::OnNewFile(const long p1, const long p2) {
 
 		filepath /= ptr->filename;
 		if (NULL != (fp = fopen(filepath.c_str(), "wb"))) {
-			char *data = ptr->filedata.get();
-			int towrite(ptr->filesize), written(0);
-			while (written < towrite) written += fwrite(data + written, 1, towrite - written, fp);
+			fwrite(ptr->filedata.get(), 1, ptr->filesize, fp);
 			fclose(fp);
 
 			if (db_.unique()) {
@@ -71,6 +73,8 @@ void FileWritter::OnNewFile(const long p1, const long p2) {
 						filepath.c_str(), ptr->tmobs.c_str(), status);
 			}
 			quenf_.pop_front();
+
+			_gLog.Write("Received: %s", filepath.c_str());
 		}
 		else {
 			_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to create file<%s>. %s",

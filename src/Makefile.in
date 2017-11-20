@@ -103,9 +103,10 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ftserver_OBJECTS = daemon.$(OBJEXT) GLog.$(OBJEXT) \
 	IOServiceKeep.$(OBJEXT) MessageQueue.$(OBJEXT) \
-	NTPClient.$(OBJEXT) FileWritter.$(OBJEXT) \
-	DataTransfer.$(OBJEXT) TransferClient.$(OBJEXT) \
-	TransferAgent.$(OBJEXT) ftserver.$(OBJEXT)
+	NTPClient.$(OBJEXT) tcpasio.$(OBJEXT) AsciiProtocol.$(OBJEXT) \
+	FileWritter.$(OBJEXT) DataTransfer.$(OBJEXT) \
+	FileReceiver.$(OBJEXT) TransferAgent.$(OBJEXT) \
+	ftserver.$(OBJEXT)
 ftserver_OBJECTS = $(am_ftserver_OBJECTS)
 am__DEPENDENCIES_1 =
 ftserver_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
@@ -271,10 +272,8 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ftserver_SOURCES = daemon.cpp GLog.cpp IOServiceKeep.cpp MessageQueue.cpp NTPClient.cpp \
-                 FileWritter.cpp \
-                 DataTransfer.cpp \
-                 TransferClient.cpp TransferAgent.cpp \
+ftserver_SOURCES = daemon.cpp GLog.cpp IOServiceKeep.cpp MessageQueue.cpp NTPClient.cpp tcpasio.cpp \
+                 AsciiProtocol.cpp FileWritter.cpp DataTransfer.cpp FileReceiver.cpp TransferAgent.cpp \
                  ftserver.cpp
 
 ftserver_LDFLAGS = -L/usr/local/lib
@@ -367,16 +366,18 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AsciiProtocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DataTransfer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileReceiver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileWritter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GLog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IOServiceKeep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MessageQueue.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NTPClient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TransferAgent.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TransferClient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftserver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpasio.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

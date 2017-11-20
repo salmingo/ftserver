@@ -52,10 +52,10 @@ protected:
 	};
 
 	typedef boost::signals2::signal<void (long, long)> CallbackFunc;	//< 消息响应函数类型
+	typedef boost::shared_array<CallbackFunc> cbfarray;			//< 回调函数数组
 	typedef CallbackFunc::slot_type CBSlot;						//< 响应函数插槽
 	typedef boost::interprocess::message_queue message_queue;	//< 消息队列
 	typedef boost::shared_ptr<message_queue> msgqptr;			//< 消息队列指针
-	typedef boost::shared_array<CallbackFunc> cbfarray;			//< 回调函数数组
 	typedef boost::unique_lock<boost::mutex> mutex_lock;			//< 互斥锁
 	typedef boost::shared_ptr<boost::thread> threadptr;			//< 线程指针
 

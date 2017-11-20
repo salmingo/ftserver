@@ -1813,8 +1813,7 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
   /usr/local/include/boost/move/algo/detail/insertion_sort.hpp \
   /usr/local/include/boost/move/detail/placement_new.hpp \
   /usr/local/include/boost/move/algo/detail/merge_sort.hpp \
-  /usr/local/include/boost/move/algo/unique.hpp \
-  ../../src/TransferClient.h ../../src/MessageQueue.h \
+  /usr/local/include/boost/move/algo/unique.hpp ../../src/MessageQueue.h \
   /usr/local/include/boost/signals2.hpp \
   /usr/local/include/boost/signals2/deconstruct.hpp \
   /usr/local/include/boost/signals2/deconstruct_ptr.hpp \
@@ -2035,7 +2034,7 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
   /usr/local/include/boost/interprocess/detail/simple_swap.hpp \
   /usr/local/include/boost/interprocess/offset_ptr.hpp \
   /usr/local/include/boost/interprocess/detail/cast_tags.hpp \
-  ../../src/ftprotocol.h ../../src/FileWritter.h \
+  ../../src/FileReceiver.h ../../src/FileWritter.h \
   /usr/local/include/boost/container/deque.hpp ../../src/DataTransfer.h \
   ../../src/AllHeader.h ../../src/tcpasio.h \
   /usr/local/include/boost/circular_buffer.hpp \
@@ -2045,7 +2044,8 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
   /usr/local/include/boost/core/pointer_traits.hpp \
   /usr/local/include/boost/circular_buffer/base.hpp \
   /usr/local/include/boost/circular_buffer/space_optimized.hpp \
-  ../../src/IOServiceKeep.h
+  ../../src/IOServiceKeep.h ../../src/AsciiProtocol.h \
+  ../../src/AsciiProtocolBase.h ../../src/NTPClient.h
 
 ../../src/GLog.h:
 
@@ -5855,8 +5855,6 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
 
 /usr/local/include/boost/move/algo/unique.hpp:
 
-../../src/TransferClient.h:
-
 ../../src/MessageQueue.h:
 
 /usr/local/include/boost/signals2.hpp:
@@ -6363,7 +6361,7 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
 
 /usr/local/include/boost/interprocess/detail/cast_tags.hpp:
 
-../../src/ftprotocol.h:
+../../src/FileReceiver.h:
 
 ../../src/FileWritter.h:
 
@@ -6390,3 +6388,9 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
 /usr/local/include/boost/circular_buffer/space_optimized.hpp:
 
 ../../src/IOServiceKeep.h:
+
+../../src/AsciiProtocol.h:
+
+../../src/AsciiProtocolBase.h:
+
+../../src/NTPClient.h:

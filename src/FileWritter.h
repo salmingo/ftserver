@@ -14,6 +14,7 @@
 #define FILEWRITTER_H_
 
 #include <boost/container/deque.hpp>
+#include <string.h>
 #include <string>
 #include "MessageQueue.h"
 #include "DataTransfer.h"
@@ -31,12 +32,27 @@ struct FileInfo {// 待写盘文件信息
 	string subpath;	//< 子目录名称
 	string filename;	//< 文件名称
 	int filesize;	//< 文件大小, 量纲: 字节
+	int rcvsize;		//< 已接收文件大小, 量纲: 字节
 	boost::shared_array<char> filedata;	//< 文件内容
 
 public:
 	FileInfo(const int _filesize) {
 		filesize = _filesize;
+		rcvsize  = 0;
 		filedata.reset(new char[filesize]);
+	}
+
+	/*!
+	 * @brief 存储新到达的数据
+	 * @param data 新到达数据指针
+	 * @param n    新到达数据长度, 量纲: 字节
+	 * @return
+	 * 文件接收完成
+	 */
+	bool DataArrive(const char *data, const int n) {
+		memcpy(filedata.get() + rcvsize, data, n);
+		rcvsize += n;
+		return (rcvsize >= filesize);
 	}
 };
 typedef boost::shared_ptr<FileInfo> nfileptr;
@@ -101,5 +117,6 @@ protected:
 	void OnNewFile(const long p1, const long p2);
 };
 typedef boost::shared_ptr<FileWritter> FileWritePtr;
+extern FileWritePtr make_filewritter();
 
 #endif /* FILEWRITTER_H_ */
