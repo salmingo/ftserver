@@ -5,6 +5,7 @@
  */
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
+#include <algorithm>
 #include "globaldef.h"
 #include "GLog.h"
 #include "TransferAgent.h"
@@ -19,6 +20,12 @@ TransferAgent::~TransferAgent() {
 }
 
 bool TransferAgent::StartService() {
+	if (param_.pathStorage.size() != param_.nStorage
+			|| param_.pathTemplate.size() != param_.nTemplate
+			|| param_.nStorage <= 0 || param_.nTemplate <= 0) {// 安全检查
+		_gLog.Write(LOG_FAULT, NULL, "storage or template path number doesn't math settings");
+		return false;
+	}
 	/* 创建文件存储接口 */
 	fwptr_ = make_filewritter();
 	fwptr_->SetDatabase(param_.bDB, param_.urlDB.c_str());
@@ -109,12 +116,35 @@ void TransferAgent::thread_free_storage() {
 	else {// 启动清理流程
 		if (++iNow >= param_.nStorage) iNow -= param_.nStorage;
 		namespace fs = boost::filesystem;
-		fs::path path(param_.pathStorage[iNow]); // 清除该路径下所有文件
+		fs::path path(param_.pathStorage[iNow]), fullpath;
+		fs::space_info space;
+		vector<string> subfile;
+		vector<string>::iterator it;
+
+		_gLog.Write("LocalStorage switched to <%s>", path.c_str());
+		for (auto &&x : fs::directory_iterator(path)) {
+			subfile.push_back(x.path().filename().string());
+		}
+		std::sort(subfile.begin(), subfile.end());
+		for (it = subfile.begin(); it != subfile.end(); ++it) {
+			fullpath = path;
+			fullpath /= (*it);
+			fs::remove_all(fullpath);
+			_gLog.Write("Erased: %s", fullpath.c_str());
+			space = fs::space(path);
+			if ((space.capacity >> 30) > param_.minDiskStorage) break;
+		}
+
+		_gLog.Write("current capacity is %d GB", space.capacity >> 30);
+		param_.iStorage = iNow;
+		fwptr_->UpdateStorage(path.c_str());
 	}
 }
 
 void TransferAgent::thread_free_template() {
-
+	namespace fs = boost::filesystem;
+	fs::path path = param_.pathTemplate[0];
+	fs::space_info space;
 }
 
 void TransferAgent::thread_idle() {
