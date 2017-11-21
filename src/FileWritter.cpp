@@ -15,15 +15,25 @@ FileWritePtr make_filewritter() {
 }
 
 FileWritter::FileWritter() {
+	running_ = false;
+	thrdmntr_.reset(new boost::thread(boost::bind(&FileWritter::thread_monitor, this)));
 }
 
 FileWritter::~FileWritter() {
-	StopService();
+	if (thrdmntr_.unique()) {
+		thrdmntr_->interrupt();
+		thrdmntr_->join();
+		running_ = false;
+	}
+	if (quenf_.size()) {
+		_gLog.Write(LOG_WARN, "", "%d unsaved files will be lost", quenf_.size());
+		quenf_.clear();
+	}
 }
 
 void FileWritter::UpdateStorage(const char* path) {
 	pathRoot_ = path;
-	_gLog.Write("LocalStorage switches to <%s>", path);
+	_gLog.Write("LocalStorage use <%s>", path);
 }
 
 void FileWritter::SetDatabase(bool enabled, const char* url) {
@@ -31,29 +41,44 @@ void FileWritter::SetDatabase(bool enabled, const char* url) {
 	else if(url) db_.reset(new DataTransfer((char*) url));
 }
 
-bool FileWritter::StartService() {
-	const CBSlot& slot = boost::bind(&FileWritter::OnNewFile, this, _1, _2);
-	RegisterMessage(MSG_NEW_FILE, slot);
-	return Start("mqfts_file_writter");
-}
-
-void FileWritter::StopService() {
-	Stop();
-	if (quenf_.size()) {
-		_gLog.Write(LOG_WARN, "", "%d unsaved files will be lost", quenf_.size());
-		quenf_.clear();
+void FileWritter::NewFile(nfileptr nfptr) {
+	if (running_) {
+		quenf_.push_back(nfptr);
+		cvfile_.notify_one();
+	}
+	else {
+		_gLog.Write(LOG_WARN, NULL, "rejects new file for FileWritter terminated");
 	}
 }
 
-void FileWritter::SaveFile(nfileptr nfptr) {
-	quenf_.push_back(nfptr);
-	PostMessage(MSG_NEW_FILE);
+void FileWritter::thread_monitor() {
+	boost::mutex dummy;
+	mutex_lock lck(dummy);
+	bool rslt(true);
+	int errcnt(0);
+	boost::chrono::minutes period(1); // 异常等待延时1分钟
+
+	running_ = true;
+	while(errcnt < 5) {
+		if (!quenf_.size()) // 队列空时, 等待新的文件
+			cvfile_.wait(lck);
+		else if (!rslt) { // 文件存储失败, 计数加1, 延时等待1分钟
+			++errcnt;
+			boost::this_thread::sleep_for(period);
+		}
+		else if (errcnt) // 存储成功, 清除计数
+			errcnt = 0;
+		rslt = save_first();
+	}
+	running_ = false;
+	_gLog.Write(LOG_FAULT, NULL, "FileWritter terminated due to too much error");
 }
 
-void FileWritter::OnNewFile(const long p1, const long p2) {
+bool FileWritter::save_first() {
 	namespace fs = boost::filesystem;
 	fs::path filepath = pathRoot_;	// 文件路径
 	nfileptr ptr = quenf_.front();
+	bool rslt(false);
 
 	filepath /= ptr->subpath;
 	if (!fs::is_directory(filepath) && !fs::create_directory(filepath)) {
@@ -74,12 +99,15 @@ void FileWritter::OnNewFile(const long p1, const long p2) {
 						filepath.c_str(), ptr->tmobs.c_str(), status);
 			}
 			quenf_.pop_front();
+			rslt = true;
 
 			_gLog.Write("Received: %s", ptr->filename.c_str());
 		}
 		else {
-			_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to create file<%s>. %s",
+			_gLog.Write(LOG_FAULT, "FileWritter::save_first", "failed to create file<%s>. %s",
 					filepath.c_str(), strerror(errno));
 		}
 	}
+
+	return rslt;
 }

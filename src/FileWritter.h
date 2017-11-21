@@ -57,39 +57,28 @@ public:
 };
 typedef boost::shared_ptr<FileInfo> nfileptr;
 
-class FileWritter : public MessageQueue {
+class FileWritter {
 public:
 	FileWritter();
 	virtual ~FileWritter();
 
 protected:
 	// 数据结构
-	enum MSG_FW {
-		MSG_NEW_FILE = MSG_USER	//< 有新的文件等待写入
-	};
-
 	typedef boost::shared_ptr<boost::thread> threadptr;
 	typedef boost::unique_lock<boost::mutex> mutex_lock;
 	typedef boost::container::deque<nfileptr> nfileQueue;
 
 protected:
 	// 成员变量
-	string pathRoot_;		//< 当前根路径
+	string pathRoot_;	//< 当前根路径
 	nfileQueue quenf_;	//< 文件队列
 	boost::shared_ptr<DataTransfer> db_;	//< 数据库访问接口
+	boost::condition_variable cvfile_;	//< 条件变量: 新的数据需要存储
+	threadptr thrdmntr_;		//< 监测线程
+	bool running_;	//< 运行标志
 
 public:
 	// 接口
-	/*!
-	 * @brief 启动写盘服务
-	 * @return
-	 * 服务启动结果
-	 */
-	bool StartService();
-	/*!
-	 * @brief 停止写盘服务
-	 */
-	void StopService();
 	/*!
 	 * @brief 更新文件存储盘区, 即根路径
 	 * @param path 路径名称
@@ -102,19 +91,23 @@ public:
 	 */
 	void SetDatabase(bool enabled = false, const char* url = NULL);
 	/*!
-	 * @brief 尝试保存文件
+	 * @brief 通知有新的文件等待存储
 	 * @param nfptr 待保存文件
 	 */
-	void SaveFile(nfileptr nfptr);
+	void NewFile(nfileptr nfptr);
 
 protected:
 	// 功能
 	/*!
-	 * @brief 响应文件写入磁盘请求
-	 * @param p1
-	 * @param p2
+	 * @brief 监测线程: 检查是否有文件等待存储, 并存储该文件到磁盘
 	 */
-	void OnNewFile(const long p1, const long p2);
+	void thread_monitor();
+	/*!
+	 * @brief 存储缓存中的第一个文件
+	 * @return
+	 * 文件存储结果
+	 */
+	bool save_first();
 };
 typedef boost::shared_ptr<FileWritter> FileWritePtr;
 extern FileWritePtr make_filewritter();

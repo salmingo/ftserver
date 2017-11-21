@@ -47,9 +47,9 @@ bool GLog::valid_file(ptime &t) {
 		if (access(gLogDir, F_OK)) mkdir(gLogDir, 0755);	// 创建目录
 		if (!access(gLogDir, W_OK | X_OK)) {
 			boost::filesystem::path path = gLogDir;
-			boost::format fmt("%s%s.log");
+			boost::format fmt("%1%%2%.log");
 			fmt % gLogPrefix % to_iso_string(date);
-			path.append(fmt.str());
+			path /= fmt.str();
 			fd_ = fopen(path.string().c_str(), "a+");
 			tmlast_ = t;
 			bytecache_ = fprintf(fd_, "%s\n", string(79, '-').c_str());

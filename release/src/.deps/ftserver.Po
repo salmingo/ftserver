@@ -1740,7 +1740,19 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
   /usr/local/include/boost/asio/windows/stream_handle_service.hpp \
   /usr/local/include/boost/asio/write_at.hpp \
   /usr/local/include/boost/asio/impl/write_at.hpp ../../src/globaldef.h \
-  ../../src/TransferAgent.h \
+  ../../src/TransferAgent.h /usr/local/include/boost/filesystem.hpp \
+  /usr/local/include/boost/filesystem/config.hpp \
+  /usr/local/include/boost/filesystem/path.hpp \
+  /usr/local/include/boost/filesystem/path_traits.hpp \
+  /usr/local/include/boost/io/detail/quoted_manip.hpp \
+  /usr/local/include/boost/functional/hash_fwd.hpp \
+  /usr/local/include/boost/filesystem/operations.hpp \
+  /usr/local/include/boost/detail/scoped_enum_emulation.hpp \
+  /usr/local/include/boost/detail/bitmask.hpp \
+  /Library/Developer/CommandLineTools/usr/include/c++/v1/stack \
+  /usr/local/include/boost/filesystem/convenience.hpp \
+  /usr/local/include/boost/filesystem/string_file.hpp \
+  /usr/local/include/boost/filesystem/fstream.hpp \
   /usr/local/include/boost/container/stable_vector.hpp \
   /usr/local/include/boost/container/new_allocator.hpp \
   /usr/local/include/boost/container/throw_exception.hpp \
@@ -1862,7 +1874,6 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
   /usr/local/include/boost/variant/detail/cast_storage.hpp \
   /usr/local/include/boost/variant/detail/hash_variant.hpp \
   /usr/local/include/boost/variant/static_visitor.hpp \
-  /usr/local/include/boost/functional/hash_fwd.hpp \
   /usr/local/include/boost/blank.hpp \
   /usr/local/include/boost/detail/templated_streams.hpp \
   /usr/local/include/boost/type_traits/is_empty.hpp \
@@ -5709,6 +5720,32 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
 
 ../../src/TransferAgent.h:
 
+/usr/local/include/boost/filesystem.hpp:
+
+/usr/local/include/boost/filesystem/config.hpp:
+
+/usr/local/include/boost/filesystem/path.hpp:
+
+/usr/local/include/boost/filesystem/path_traits.hpp:
+
+/usr/local/include/boost/io/detail/quoted_manip.hpp:
+
+/usr/local/include/boost/functional/hash_fwd.hpp:
+
+/usr/local/include/boost/filesystem/operations.hpp:
+
+/usr/local/include/boost/detail/scoped_enum_emulation.hpp:
+
+/usr/local/include/boost/detail/bitmask.hpp:
+
+/Library/Developer/CommandLineTools/usr/include/c++/v1/stack:
+
+/usr/local/include/boost/filesystem/convenience.hpp:
+
+/usr/local/include/boost/filesystem/string_file.hpp:
+
+/usr/local/include/boost/filesystem/fstream.hpp:
+
 /usr/local/include/boost/container/stable_vector.hpp:
 
 /usr/local/include/boost/container/new_allocator.hpp:
@@ -5952,8 +5989,6 @@ ftserver.o: ../../src/ftserver.cpp ../../src/GLog.h \
 /usr/local/include/boost/variant/detail/hash_variant.hpp:
 
 /usr/local/include/boost/variant/static_visitor.hpp:
-
-/usr/local/include/boost/functional/hash_fwd.hpp:
 
 /usr/local/include/boost/blank.hpp:
 

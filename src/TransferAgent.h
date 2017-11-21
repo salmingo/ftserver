@@ -11,6 +11,8 @@
 #ifndef TRANSFERAGENT_H_
 #define TRANSFERAGENT_H_
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/container/stable_vector.hpp>
 #include "MessageQueue.h"
 #include "FileReceiver.h"
@@ -95,6 +97,12 @@ protected:
 	 * @param thrd 线程指针
 	 */
 	void interrupt_thread(threadptr& thrd);
+	/*!
+	 * @brief 查看文件/目录的最后修改时间
+	 * @param path     路径
+	 * @param tmlast   最后修改时间
+	 */
+	void get_filetime(const boost::filesystem::path &path, boost::posix_time::ptime &tmlast);
 };
 
 #endif /* TRANSFERAGENT_H_ */

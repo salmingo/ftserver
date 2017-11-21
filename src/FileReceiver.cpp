@@ -107,7 +107,7 @@ void FileReceiver::on_network_close(long param1, long param2) {
 
 void FileReceiver::on_receive_complete(long param1, long param2) {
 	if (fileptr_->filesize == fileptr_->rcvsize) {
-		fwptr_->SaveFile(fileptr_);
+		fwptr_->NewFile(fileptr_);
 		notify_status(COMPLETE);
 	}
 	else {

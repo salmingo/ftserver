@@ -3,14 +3,10 @@
  * @version 0.1
  * @date 2017-10-29
  */
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem.hpp>
 #include <algorithm>
 #include "globaldef.h"
 #include "GLog.h"
 #include "TransferAgent.h"
-
-using namespace boost::posix_time;
 
 TransferAgent::TransferAgent() {
 	param_.LoadFile(gConfigPath);
@@ -33,10 +29,6 @@ bool TransferAgent::StartService() {
 	const char *path = find_storage();
 	if (path) {
 		fwptr_->UpdateStorage(path);
-		if (fwptr_->StartService()) {
-			_gLog.Write(LOG_FAULT, NULL, "failed to start file writter service");
-			return false;
-		}
 	}
 	else {
 		_gLog.Write(LOG_FAULT, NULL, "no disk has enough free capacity for raw data");
@@ -46,7 +38,7 @@ bool TransferAgent::StartService() {
 	const TCPServer::CBSlot &slot = boost::bind(&TransferAgent::network_accept, this, _1, _2);
 	tcpsrv_ = maketcp_server();
 	tcpsrv_->RegisterAccespt(slot);
-	if (!tcpsrv_->CreateServer(param_.port)) {
+	if (tcpsrv_->CreateServer(param_.port)) {
 		_gLog.Write(LOG_FAULT, NULL, "failed to create server on port<%d>", param_.port);
 		return false;
 	}
@@ -83,7 +75,7 @@ const char *TransferAgent::find_storage() {
 		if (iNew >= n) iNew -= n;
 		path = param_.pathStorage[iNew];
 		space = fs::space(path);
-		if ((space.capacity >> 30) >= param_.minDiskStorage) break;
+		if ((space.available >> 30) >= param_.minDiskStorage) break;
 	}
 	if (i < n && iNow != iNew) param_.iStorage = iNew;
 	return i == n ? NULL : param_.pathStorage[iNew].c_str();
@@ -98,23 +90,23 @@ void TransferAgent::free_storage() {
 	else {// 启动清理流程
 		if (++iNow >= param_.nStorage) iNow -= param_.nStorage;
 		namespace fs = boost::filesystem;
-		fs::path path(param_.pathStorage[iNow]), fullpath;
-		fs::space_info space;
-		vector<string> subfile;
-		vector<string>::iterator it;
+		namespace pt = boost::posix_time;
 
-		for (auto &&x : fs::directory_iterator(path)) {
-			subfile.push_back(x.path().filename().string());
+		fs::path path(param_.pathStorage[iNow]);
+		fs::space_info space;
+		fs::directory_iterator itend = fs::directory_iterator();
+		pt::ptime now = pt::second_clock::local_time(), tmlast;
+		int days3 = 3 * 86400; // 删除3日前所有数据
+
+		_gLog.Write("Cleaning <%s> for LocalStorage", path.c_str());
+		for (fs::directory_iterator x = fs::directory_iterator(path); x != itend; ++x) {
+			get_filetime(x->path(), tmlast);
+			if (x->path().filename().c_str()[0] != 'G') continue; // 仅清除G开头文件/目录 -- GWAC
+			if ((now - tmlast).total_seconds() > days3) fs::remove_all(x->path());
 		}
-		std::sort(subfile.begin(), subfile.end());
-		for (it = subfile.begin(); it != subfile.end(); ++it) {
-			fullpath = path;
-			fullpath /= (*it);
-			fs::remove_all(fullpath);
-			_gLog.Write("Erased: %s", fullpath.c_str());
-			space = fs::space(path);
-			if ((space.capacity >> 30) > param_.minDiskStorage) break;
-		}
+
+		space = fs::space(path);
+		_gLog.Write("free capacity of <%s> is %d GB", path.c_str(), space.available >> 30);
 		param_.iStorage = iNow;
 		fwptr_->UpdateStorage(path.c_str());
 	}
@@ -122,8 +114,30 @@ void TransferAgent::free_storage() {
 
 void TransferAgent::free_template() {
 	namespace fs = boost::filesystem;
+	namespace pt = boost::posix_time;
+
 	fs::path path = param_.pathTemplate[0];
 	fs::space_info space;
+
+	space = fs::space(path);
+	if ((space.available >> 30) <= param_.minDiskTemplate) {// 启动清理流程
+		fs::directory_iterator itend = fs::directory_iterator();
+		pt::ptime now = pt::second_clock::local_time(), tmlast;
+		int days3 = 3 * 86400; // 删除3日前所有数据
+
+		for (int i = 0; i < param_.nTemplate; ++i) {
+			path = param_.pathTemplate[i];
+
+			_gLog.Write("Cleaning <%s> for Template", path.c_str());
+			for (fs::directory_iterator x = fs::directory_iterator(path); x != itend; ++x) {
+				get_filetime(x->path(), tmlast);
+				if (x->path().filename().c_str()[0] != 'G') continue; // 仅清除G开头文件/目录 -- GWAC
+				if ((now - tmlast).total_seconds() > days3) fs::remove_all(x->path());
+			}
+		}
+		space = fs::space(path);
+		_gLog.Write("free capacity for template is %d GB", space.available >> 30);
+	}
 }
 
 void TransferAgent::thread_idle() {
@@ -144,22 +158,27 @@ void TransferAgent::thread_idle() {
 void TransferAgent::thread_autofree() {
 	while(1) {
 		boost::this_thread::sleep_for(boost::chrono::seconds(next_noon()));
-		free_storage();
-		free_template();
+		if (param_.bFreeStorage)  free_storage();
+		if (param_.bFreeTemplate) free_template();
 	}
 }
 
 long TransferAgent::next_noon() {
-	ptime now(second_clock::local_time());
-	ptime noon(now.date(), hours(12));
+	namespace pt = boost::posix_time;
+	pt::ptime now(pt::second_clock::local_time());
+	pt::ptime noon(now.date(), pt::hours(12));
 	long secs = (noon - now).total_seconds();
 	return secs < 10 ? secs + 86400 : secs;
 }
 
-void MessageQueue::interrupt_thread(threadptr& thrd) {
+void TransferAgent::interrupt_thread(threadptr& thrd) {
 	if (thrd.unique()) {
 		thrd->interrupt();
 		thrd->join();
 		thrd.reset();
 	}
+}
+
+void TransferAgent::get_filetime(const boost::filesystem::path &path, boost::posix_time::ptime &tmlast) {
+	tmlast = boost::posix_time::from_time_t(boost::filesystem::last_write_time(path));
 }

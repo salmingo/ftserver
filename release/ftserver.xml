@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <version>0.2</version>
-<date>20171120T131655</date>
+<date>20171121T062826</date>
 <Server Port="4020"/>
 <NTP Enable="true" IP="172.28.1.3" Difference="5"/>
 <Database Enable="true" URL="http://172.28.8.8:8080/gwebend/"/>
