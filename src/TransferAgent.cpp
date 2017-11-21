@@ -121,7 +121,6 @@ void TransferAgent::thread_free_storage() {
 		vector<string> subfile;
 		vector<string>::iterator it;
 
-		_gLog.Write("LocalStorage switched to <%s>", path.c_str());
 		for (auto &&x : fs::directory_iterator(path)) {
 			subfile.push_back(x.path().filename().string());
 		}
@@ -134,8 +133,6 @@ void TransferAgent::thread_free_storage() {
 			space = fs::space(path);
 			if ((space.capacity >> 30) > param_.minDiskStorage) break;
 		}
-
-		_gLog.Write("current capacity is %d GB", space.capacity >> 30);
 		param_.iStorage = iNow;
 		fwptr_->UpdateStorage(path.c_str());
 	}

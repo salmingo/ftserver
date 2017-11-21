@@ -23,6 +23,7 @@ FileWritter::~FileWritter() {
 
 void FileWritter::UpdateStorage(const char* path) {
 	pathRoot_ = path;
+	_gLog.Write("LocalStorage switches to <%s>", path);
 }
 
 void FileWritter::SetDatabase(bool enabled, const char* url) {
@@ -74,7 +75,7 @@ void FileWritter::OnNewFile(const long p1, const long p2) {
 			}
 			quenf_.pop_front();
 
-			_gLog.Write("Received: %s", filepath.c_str());
+			_gLog.Write("Received: %s", ptr->filename.c_str());
 		}
 		else {
 			_gLog.Write(LOG_FAULT, "FileWritter::OnNewFile", "failed to create file<%s>. %s",
