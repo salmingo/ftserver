@@ -19,20 +19,16 @@
 #include "tcpasio.h"
 #include "NTPClient.h"
 
-class TransferAgent : public MessageQueue {
+class TransferAgent {
 public:
 	TransferAgent();
 	virtual ~TransferAgent();
 
 public:
 	// 数据结构
-	enum MSG_TA {
-		MSG_CLEAN_STORAGE,	//< 清除原始数据存储空间
-		MSG_CLEAN_TEMPLATE, //< 清除模板数据存储空间
-		MSG_LAST		//< 占位
-	};
-
 	typedef boost::container::stable_vector<FileRcvPtr> FileRcvVec;
+	typedef boost::shared_ptr<boost::thread> threadptr;
+	typedef boost::unique_lock<boost::mutex> mutex_lock;
 
 protected:
 	// 成员变量
@@ -40,8 +36,6 @@ protected:
 	FileWritePtr fwptr_;		//< 文件写盘接口
 	TcpSPtr tcpsrv_;			//< 网络服务器
 	NTPPtr ntp_;				//< NTP接口
-	threadptr thrdFreeStorage_;	//< 线程: 清除原始数据存储空间
-	threadptr thrdFreeTemplate_;	//< 线程: 清除模板存储空间
 	threadptr thrdIdle_;			//< 线程: 空闲检查文件接收器有效性
 	threadptr thrdAutoFree_;		//< 线程: 定时磁盘清除线程
 	boost::mutex mtx_filercv_;	//< 互斥锁, 文件接收器
@@ -63,10 +57,6 @@ public:
 protected:
 	// 功能
 	/*!
-	 * @brief 注册消息
-	 */
-	void register_messages();
-	/*!
 	 * @brief 网络连接请求
 	 * @param 为客户端分配的网络资源
 	 * @param 服务器地址
@@ -79,13 +69,13 @@ protected:
 	 */
 	const char *find_storage();
 	/*!
-	 * @brief 线程, 清除本地存储空间
+	 * @brief 清除本地存储空间
 	 */
-	void thread_free_storage();
+	void free_storage();
 	/*!
-	 * @brief 线程, 清除模板存储空间
+	 * @brief 清除模板存储空间
 	 */
-	void thread_free_template();
+	void free_template();
 	/*!
 	 * @brief 线程, 检查FileReceiver的有效性
 	 */
@@ -101,17 +91,10 @@ protected:
 	 */
 	long next_noon();
 	/*!
-	 * @brief 响应事件, 启动本地数据存储空间清除线程
-	 * @param param1 保留
-	 * @param param2 保留
+	 * @brief 中止线程
+	 * @param thrd 线程指针
 	 */
-	void on_clean_storage(long param1, long param2);
-	/*!
-	 * @brief 响应事件, 启动模板数据存储空间清除线程
-	 * @param param1 保留
-	 * @param param2 保留
-	 */
-	void on_clean_template(long param1, long param2);
+	void interrupt_thread(threadptr& thrd);
 };
 
 #endif /* TRANSFERAGENT_H_ */

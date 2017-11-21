@@ -42,13 +42,6 @@ bool TransferAgent::StartService() {
 		_gLog.Write(LOG_FAULT, NULL, "no disk has enough free capacity for raw data");
 		return false;
 	}
-	/* 创建消息队列 */
-	string mqname = "msgque_ftserver";
-	register_messages();
-	if (!Start(mqname.c_str())) {
-		_gLog.Write(LOG_FAULT, NULL, "failed to create message queue<%s>", mqname.c_str());
-		return false;
-	}
 	/* 启动服务器 */
 	const TCPServer::CBSlot &slot = boost::bind(&TransferAgent::network_accept, this, _1, _2);
 	tcpsrv_ = maketcp_server();
@@ -72,18 +65,7 @@ bool TransferAgent::StartService() {
 void TransferAgent::StopService() {
 	interrupt_thread(thrdIdle_);
 	interrupt_thread(thrdAutoFree_);
-	if (thrdFreeStorage_) thrdFreeStorage_->interrupt();
-	if (thrdFreeTemplate_) thrdFreeTemplate_->interrupt();
 	filercv_.clear();
-	Stop();
-}
-
-void TransferAgent::register_messages() {
-	const CBSlot &slot1 = boost::bind(&TransferAgent::on_clean_storage,  this, _1, _2);
-	const CBSlot &slot2 = boost::bind(&TransferAgent::on_clean_template, this, _1, _2);
-
-	RegisterMessage(MSG_CLEAN_STORAGE,  slot1);
-	RegisterMessage(MSG_CLEAN_TEMPLATE, slot2);
 }
 
 void TransferAgent::network_accept(const TcpCPtr&client, const long server) {
@@ -107,7 +89,7 @@ const char *TransferAgent::find_storage() {
 	return i == n ? NULL : param_.pathStorage[iNew].c_str();
 }
 
-void TransferAgent::thread_free_storage() {
+void TransferAgent::free_storage() {
 	int iNow = param_.iStorage;
 	const char *path = find_storage();
 	if (path) {// 更新存储空间
@@ -138,7 +120,7 @@ void TransferAgent::thread_free_storage() {
 	}
 }
 
-void TransferAgent::thread_free_template() {
+void TransferAgent::free_template() {
 	namespace fs = boost::filesystem;
 	fs::path path = param_.pathTemplate[0];
 	fs::space_info space;
@@ -162,8 +144,8 @@ void TransferAgent::thread_idle() {
 void TransferAgent::thread_autofree() {
 	while(1) {
 		boost::this_thread::sleep_for(boost::chrono::seconds(next_noon()));
-		PostMessage(MSG_CLEAN_STORAGE);
-		PostMessage(MSG_CLEAN_TEMPLATE);
+		free_storage();
+		free_template();
 	}
 }
 
@@ -174,14 +156,10 @@ long TransferAgent::next_noon() {
 	return secs < 10 ? secs + 86400 : secs;
 }
 
-void TransferAgent::on_clean_storage(long param1, long param2) {
-	thrdFreeStorage_.reset(new boost::thread(boost::bind(&TransferAgent::thread_free_storage, this)));
-	thrdFreeStorage_->join();
-	thrdFreeStorage_.reset();
-}
-
-void TransferAgent::on_clean_template(long param1, long param2) {
-	thrdFreeTemplate_.reset(new boost::thread(boost::bind(&TransferAgent::thread_free_template, this)));
-	thrdFreeTemplate_->join();
-	thrdFreeTemplate_.reset();
+void MessageQueue::interrupt_thread(threadptr& thrd) {
+	if (thrd.unique()) {
+		thrd->interrupt();
+		thrd->join();
+		thrd.reset();
+	}
 }
