@@ -39,10 +39,11 @@ public:
 	typedef CallbackFunc::slot_type CBSlot;
 	typedef boost::unique_lock<boost::mutex> mutex_lock;	//< 互斥锁
 	typedef boost::circular_buffer<char> crcbuff;	//< 循环缓冲区
-	typedef boost::shared_array<char> carray;	//< 字符型数组
+	typedef boost::shared_array<char> charray;	//< 字符型数组
+
+	friend class TCPServer;
 
 protected:
-	friend class TCPServer;
 	// 成员变量
 	IOServiceKeep keep_;	//< 提供io_service对象
 	tcp::socket   sock_;	//< 套接字
@@ -52,7 +53,7 @@ protected:
 
 	bool usebuf_;	//< 启用循环缓冲区
 	int bytercv_;	//< 已接收信息长度
-	carray bufrcv_;	//< 单条接收缓冲区
+	charray bufrcv_;	//< 单条接收缓冲区
 	crcbuff crcrcv_;		//< 循环接收缓冲区
 	crcbuff crcsnd_;		//< 循环发送缓冲区
 	boost::mutex mtxrcv_;	//< 接收互斥锁
@@ -176,6 +177,10 @@ protected:
 	 * @brief 尝试发送缓冲区数据
 	 */
 	void start_write();
+	/*!
+	 * @brief 服务器端建立网络连接后调用, 启动接收流程
+	 */
+	void start();
 };
 typedef boost::shared_ptr<TCPClient> TcpCPtr;	//< 客户端网络资源访问指针类型
 /*!

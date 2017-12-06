@@ -37,7 +37,8 @@ bool TCPClient::Connect(const string& host, const uint16_t port) {
 	tcp::resolver::iterator itertor = resolver.resolve(query);
 	boost::system::error_code ec;
 	sock_.connect(*itertor, ec);
-	return (!ec && IsOpen());
+	if (!ec) sock_.set_option(socket_base::keep_alive(true));
+	return !ec;
 }
 
 /*
@@ -171,16 +172,18 @@ int TCPClient::Write(const char* buff, const int len) {
 void TCPClient::handle_connect(const boost::system::error_code& ec) {
 	if (!cbconn_.empty()) cbconn_((const long) this, ec.value());
 	if (!ec) {
-		socket_base::keep_alive option(true);
-		sock_.set_option(option);
+		sock_.set_option(socket_base::keep_alive(true));
 		start_read();
 	}
 }
 
 void TCPClient::handle_read(const boost::system::error_code& ec, int n) {
-	if (!ec && usebuf_) {
+	if (!ec){
 		mutex_lock lock(mtxrcv_);
-		for(int i = 0; i < n; ++i) crcrcv_.push_back(bufrcv_[i]);
+		if (usebuf_) {
+			for(int i = 0; i < n; ++i) crcrcv_.push_back(bufrcv_[i]);
+		}
+		else bytercv_ = n;
 	}
 	if (!cbrcv_.empty()) cbrcv_((const long) this, ec.value());
 	if (!ec) start_read();
@@ -210,6 +213,11 @@ void TCPClient::start_write() {
 				boost::bind(&TCPClient::handle_write, this,
 						placeholders::error, placeholders::bytes_transferred));
 	}
+}
+
+void TCPClient::start() {
+	sock_.set_option(socket_base::keep_alive(true));
+	start_read();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -259,7 +267,7 @@ void TCPServer::start_accept() {
 void TCPServer::handle_accept(const TcpCPtr& client, const boost::system::error_code& ec) {
 	if (!ec) {
 		if (!cbaccept_.empty()) cbaccept_(client, (const long) this);
-		client->start_read();
+		client->start();
 	}
 
 	start_accept();
