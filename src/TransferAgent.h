@@ -79,6 +79,11 @@ protected:
 	 */
 	void free_template();
 	/*!
+	 * @brief 清除模板目录内大容量文件
+	 * @param dirname 目录名称
+	 */
+	void free_template_directory(const char *dirname);
+	/*!
 	 * @brief 线程, 检查FileReceiver的有效性
 	 */
 	void thread_idle();

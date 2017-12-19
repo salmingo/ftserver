@@ -54,6 +54,7 @@ void FileReceiver::network_receive(long client, long ec) {
 	if (ec) PostMessage(MSG_NETWORK_CLOSE);
 	else if(state_ == READY) {// 接收文件数据
 		int n = tcpptr_->Read(bufrcv_.get(), TCP_PACK_SIZE, 0);
+		_gLog.Write("receied %d bytes", n);
 		if (fileptr_->DataArrive(bufrcv_.get(), n)) PostMessage(MSG_RECEIVE_COMPLETE);
 	}
 	else if(state_ == WAITING) PostMessage(MSG_NETWORK_RECEIVE);
@@ -78,25 +79,31 @@ void FileReceiver::on_network_receive(long param1, long param2) {
 	tcpptr_->Read(bufrcv_.get(), pos + len, 0);
 	bufrcv_[pos] = 0;
 	base = ascproto_->Resolve(bufrcv_.get());
-	if (base.unique() && base->type == "fileinfo") {
-		// 缓存文件信息
-		apfileinfo fileinfo = from_apbase<ascii_proto_fileinfo>(base);
-		const long n = fileptr_.use_count();
-		if (n == 0 || n > 1 || (n == 1 && fileptr_->filesize != fileinfo->filesize))
-			fileptr_ = boost::make_shared<FileInfo>(fileinfo->filesize);
-		fileptr_->gid      = fileinfo->gid;
-		fileptr_->uid      = fileinfo->uid;
-		fileptr_->cid      = fileinfo->cid;
-		fileptr_->grid     = fileinfo->grid;
-		fileptr_->field    = fileinfo->field;
-		fileptr_->tmobs    = fileinfo->tmobs;
-		fileptr_->subpath  = fileinfo->subpath;
-		fileptr_->filename = fileinfo->filename;
-		// 通知可以接收数据
-		notify_status(READY);
+	if (base.unique()) {
+		if (base->type == "fileinfo") {
+			// 缓存文件信息
+			apfileinfo fileinfo = from_apbase<ascii_proto_fileinfo>(base);
+			const long n = fileptr_.use_count();
+			if (n == 0 || n > 1 || (n == 1 && fileptr_->filesize != fileinfo->filesize))
+				fileptr_ = boost::make_shared<FileInfo>(fileinfo->filesize);
+			fileptr_->gid      = fileinfo->gid;
+			fileptr_->uid      = fileinfo->uid;
+			fileptr_->cid      = fileinfo->cid;
+			fileptr_->grid     = fileinfo->grid;
+			fileptr_->field    = fileinfo->field;
+			fileptr_->tmobs    = fileinfo->tmobs;
+			fileptr_->subpath  = fileinfo->subpath;
+			fileptr_->filename = fileinfo->filename;
+			fileptr_->rcvsize  = 0;
+			// 通知可以接收数据
+			notify_status(READY);
+		}
+		else if (base->type == "filestat") {
+			//...心跳机制, 不处理
+		}
 	}
 	else {
-		_gLog.Write(LOG_FAULT, NULL, "failed to resolve file information");
+		_gLog.Write(LOG_FAULT, NULL, "wrong communication");
 		tcpptr_->Close();
 	}
 }

@@ -112,6 +112,16 @@ void TransferAgent::free_storage() {
 	}
 }
 
+void TransferAgent::free_template_directory(const char *dirname) {
+	namespace fs = boost::filesystem;
+	fs::path path = dirname;
+	fs::directory_iterator itend = fs::directory_iterator();
+
+	for (fs::directory_iterator x = fs::directory_iterator(path); x != itend; ++x) {
+		if ((fs::file_size(x->path()) >> 10) > 100) fs::remove(x->path());
+	}
+}
+
 void TransferAgent::free_template() {
 	namespace fs = boost::filesystem;
 	namespace pt = boost::posix_time;
@@ -123,7 +133,9 @@ void TransferAgent::free_template() {
 	if ((space.available >> 30) <= param_.minDiskTemplate) {// 启动清理流程
 		fs::directory_iterator itend = fs::directory_iterator();
 		pt::ptime now = pt::second_clock::local_time(), tmlast;
-		int days3 = 3 * 86400; // 删除3日前所有数据
+		int days;
+		int days3 = 3 * 86400; // 删除3日前数据
+		int days10= 10 * 86400; // 删除10日前数据
 
 		for (int i = 0; i < param_.nTemplate; ++i) {
 			path = param_.pathTemplate[i];
@@ -132,7 +144,13 @@ void TransferAgent::free_template() {
 			for (fs::directory_iterator x = fs::directory_iterator(path); x != itend; ++x) {
 				get_filetime(x->path(), tmlast);
 				if (x->path().filename().c_str()[0] != 'G') continue; // 仅清除G开头文件/目录 -- GWAC
-				if ((now - tmlast).total_seconds() > days3) fs::remove_all(x->path());
+				days = (now - tmlast).total_seconds();
+				if (days > days10 || (fs::is_regular_file(x->path()) && days > days3)) {
+					fs::remove_all(x->path());
+				}
+				else if (days > days3 && fs::is_directory(x->path())) {// 3-7天间目录, 清除目录内大容量文件
+					free_template_directory(x->path().c_str());
+				}
 			}
 		}
 		space = fs::space(path);
@@ -156,10 +174,14 @@ void TransferAgent::thread_idle() {
 }
 
 void TransferAgent::thread_autofree() {
+	// 服务启动5秒后检查一次磁盘空间
+	boost::this_thread::sleep_for(boost::chrono::seconds(5));
+
 	while(1) {
-		boost::this_thread::sleep_for(boost::chrono::seconds(next_noon()));
 		if (param_.bFreeStorage)  free_storage();
 		if (param_.bFreeTemplate) free_template();
+		// 之后每天中午检查一次磁盘空间
+		boost::this_thread::sleep_for(boost::chrono::seconds(next_noon()));
 	}
 }
 

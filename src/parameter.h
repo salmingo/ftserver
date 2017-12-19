@@ -76,7 +76,7 @@ public:
 		pt.add("Server.<xmlattr>.Port",     port = 4020);
 		pt.add("NTP.<xmlattr>.Enable",      bNTP = true);
 		pt.add("NTP.<xmlattr>.IP",          ipNTP = "172.28.1.3");
-		pt.add("NTP.<xmlattr>.Difference",  diffNTP = 5);
+		pt.add("NTP.<xmlattr>.Difference",  diffNTP = 100);
 		pt.add("Database.<xmlattr>.Enable", bDB = true);
 		pt.add("Database.<xmlattr>.URL",    urlDB = "http://172.28.8.8:8080/gwebend/");
 
@@ -100,7 +100,7 @@ public:
 		string path21 = "/data/GWAC/output";
 		string path22 = "/data/GWAC/gwacsub";
 		node2.add("AutoFree.<xmlattr>.Enable", bFreeTemplate = true);
-		node2.add("AutoFree.<xmlattr>.MinimumCapacity", minDiskTemplate = 100);
+		node2.add("AutoFree.<xmlattr>.MinimumCapacity", minDiskTemplate = 1000);
 		node2.add("Directory.<xmlattr>.Number", nTemplate = 2);
 		node2.add("PathRoot#1.<xmlattr>.Name", path21);
 		node2.add("PathRoot#2.<xmlattr>.Name", path22);
@@ -132,7 +132,7 @@ public:
 				else if (boost::iequals(child.first, "NTP")) {
 					bNTP    = child.second.get("NTP.<xmlattr>.Enable",     true);
 					ipNTP   = child.second.get("NTP.<xmlattr>.IP",         "172.28.1.3");
-					diffNTP = child.second.get("NTP.<xmlattr>.Difference", 5);
+					diffNTP = child.second.get("NTP.<xmlattr>.Difference", 100);
 				}
 				else if (boost::iequals(child.first, "Database")) {
 					bDB   = child.second.get("Database.<xmlattr>.Enable", true);
@@ -154,7 +154,7 @@ public:
 				else if (boost::iequals(child.first, "Template")) {
 					boost::format fmt("PathRoot#%d.<xmlattr>.Name");
 					bFreeTemplate   = child.second.get("AutoFree.<xmlattr>.Enable", true);
-					minDiskTemplate = child.second.get("AutoFree.<xmlattr>.MinimumCapacity", 100);
+					minDiskTemplate = child.second.get("AutoFree.<xmlattr>.MinimumCapacity", 1000);
 					nTemplate = child.second.get("Directory.<xmlattr>.Number", 1);
 					for (int i = 1; i <= nTemplate; ++i) {
 						fmt % i;
