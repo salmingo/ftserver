@@ -31,6 +31,8 @@ struct param_config {// 软件配置参数
 	int iStorage;	//< 当前使用盘区索引
 	int iOld;		//< 上次使用盘区索引
 	vector<string> pathStorage;	//< 文件存储盘区名称列表
+	bool bNotifyStorage;			//< 通知已变更磁盘存储空间
+	string pathNotifyStorage;	//< 通知文件路径
 	/* 模板数据存储路径 */
 	bool bFreeTemplate;	//< 自动清除模板空间
 	int minDiskTemplate;	//< 最小磁盘容量, 量纲: GB
@@ -91,6 +93,8 @@ public:
 		node1.add("PathRoot#1.<xmlattr>.Name", path11);
 		node1.add("PathRoot#2.<xmlattr>.Name", path12);
 		node1.add("PathRoot#3.<xmlattr>.Name", path13);
+		node1.add("Notify.<xmlattr>.Enable", bNotifyStorage = true);
+		node1.add("Notify.<xmlattr>.FilePath", pathNotifyStorage = "/data/GWAC/xMatch_Dir/LocalStorage.txt");
 		pathStorage.push_back(path11);
 		pathStorage.push_back(path12);
 		pathStorage.push_back(path13);
@@ -150,6 +154,8 @@ public:
 						string path = child.second.get(fmt.str(), "/data");
 						pathStorage.push_back(path);
 					}
+					bNotifyStorage = child.second.get("Notify.<xmlattr>.Enable", true);
+					pathNotifyStorage = child.second.get("Notify.<xmlattr>.FilePath", "/data/GWAC/xMatch_Dir/LocalStorage.txt");
 				}
 				else if (boost::iequals(child.first, "Template")) {
 					boost::format fmt("PathRoot#%d.<xmlattr>.Name");

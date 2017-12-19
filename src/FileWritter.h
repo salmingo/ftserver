@@ -76,6 +76,7 @@ protected:
 	boost::condition_variable cvfile_;	//< 条件变量: 新的数据需要存储
 	threadptr thrdmntr_;		//< 监测线程
 	bool running_;	//< 运行标志
+	string pathNotify_;	//< 当改变存储路径时, 在文件中记录该变更
 
 public:
 	// 接口
@@ -90,6 +91,12 @@ public:
 	 * @param url     URL地址
 	 */
 	void SetDatabase(bool enabled = false, const char* url = NULL);
+	/*!
+	 * @brief 设置文件存储盘区变更文件路径
+	 * @param enabled   启用通知功能
+	 * @param filepath  通知文件路径
+	 */
+	void SetNotifyPath(bool enabled = false, const char* filepath = NULL);
 	/*!
 	 * @brief 通知有新的文件等待存储
 	 * @param nfptr 待保存文件

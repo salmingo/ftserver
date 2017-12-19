@@ -25,6 +25,7 @@ bool TransferAgent::StartService() {
 	/* 创建文件存储接口 */
 	fwptr_ = make_filewritter();
 	fwptr_->SetDatabase(param_.bDB, param_.urlDB.c_str());
+	fwptr_->SetNotifyPath(param_.bNotifyStorage, param_.pathNotifyStorage.c_str());
 	/* 查找可用磁盘存储空间 */
 	const char *path = find_storage();
 	if (path) {
@@ -88,7 +89,7 @@ void TransferAgent::free_storage() {
 		if (iNow != param_.iStorage) fwptr_->UpdateStorage(path);
 	}
 	else {// 启动清理流程
-		if (++iNow >= param_.nStorage) iNow -= param_.nStorage;
+		if (++iNow >= param_.nStorage) iNow = 0;
 		namespace fs = boost::filesystem;
 		namespace pt = boost::posix_time;
 

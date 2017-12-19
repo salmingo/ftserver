@@ -33,12 +33,22 @@ FileWritter::~FileWritter() {
 
 void FileWritter::UpdateStorage(const char* path) {
 	pathRoot_ = path;
+	if (!pathNotify_.empty()) {
+		FILE *fp = fopen(pathNotify_.c_str(), "wt");
+		boost::posix_time::ptime t(boost::posix_time::second_clock::local_time());
+		fprintf(fp, "%s     %s\n", path, boost::posix_time::to_iso_extended_string(t));
+		fclose(fp);
+	}
 	_gLog.Write("LocalStorage use <%s>", path);
 }
 
 void FileWritter::SetDatabase(bool enabled, const char* url) {
 	if (!enabled) db_.reset();
 	else if(url) db_.reset(new DataTransfer((char*) url));
+}
+
+void FileWritter::SetNotifyPath(bool enabled, const char* filepath) {
+	pathNotify_ = enabled ? filepath : "";
 }
 
 void FileWritter::NewFile(nfileptr nfptr) {
