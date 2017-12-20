@@ -36,7 +36,7 @@ void FileWritter::UpdateStorage(const char* path) {
 	if (!pathNotify_.empty()) {
 		FILE *fp = fopen(pathNotify_.c_str(), "wt");
 		boost::posix_time::ptime t(boost::posix_time::second_clock::local_time());
-		fprintf(fp, "%s     %s\n", path, boost::posix_time::to_iso_extended_string(t));
+		fprintf(fp, "%s     %s\n", path, boost::posix_time::to_iso_extended_string(t).c_str());
 		fclose(fp);
 	}
 	_gLog.Write("LocalStorage use <%s>", path);

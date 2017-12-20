@@ -82,7 +82,7 @@ void GLog::Write(const char* format, ...) {
 	if (format == NULL) return;
 
 	mutex_lock lock(mtx_);
-	ptime t(microsec_clock::local_time());
+	ptime t(second_clock::local_time());
 
 	if (valid_file(t)) {
 		// 时间标签
@@ -101,7 +101,7 @@ void GLog::Write(const LOG_TYPE type, const char* where, const char* format, ...
 	if (format == NULL) return;
 
 	mutex_lock lock(mtx_);
-	ptime t(microsec_clock::local_time());
+	ptime t(second_clock::local_time());
 
 	if (valid_file(t)) {
 		// 时间标签

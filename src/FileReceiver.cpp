@@ -54,7 +54,6 @@ void FileReceiver::network_receive(long client, long ec) {
 	if (ec) PostMessage(MSG_NETWORK_CLOSE);
 	else if(state_ == READY) {// 接收文件数据
 		int n = tcpptr_->Read(bufrcv_.get(), TCP_PACK_SIZE, 0);
-		_gLog.Write("receied %d bytes", n);
 		if (fileptr_->DataArrive(bufrcv_.get(), n)) PostMessage(MSG_RECEIVE_COMPLETE);
 	}
 	else if(state_ == WAITING) PostMessage(MSG_NETWORK_RECEIVE);
